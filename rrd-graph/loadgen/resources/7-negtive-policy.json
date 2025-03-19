@@ -1,0 +1,69 @@
+{
+    "thread_id": "7",
+    "actions": [
+        {
+            "last_time": 10,
+            "pause_time": 5,
+            "total_tweets_per_ask": 25, 
+            "positive_percentage": 80, 
+            "neutral_percentage": 10,
+            "negative_percentage": 10
+        },
+        {
+            "last_time": 10, 
+            "pause_time": 5, 
+            "total_tweets_per_ask": 25,
+            "positive_percentage": 70, 
+            "neutral_percentage": 10,
+            "negative_percentage": 20
+        },
+        {
+            "last_time": 10, 
+            "pause_time": 5, 
+            "total_tweets_per_ask": 25,
+            "positive_percentage": 60, 
+            "neutral_percentage": 10,
+            "negative_percentage": 30
+        },
+        {
+            "last_time": 10, 
+            "pause_time": 5, 
+            "total_tweets_per_ask": 25, 
+            "positive_percentage": 50, 
+            "neutral_percentage": 20,
+            "negative_percentage": 30
+        },
+        {
+            "last_time": 10, 
+            "pause_time": 5, 
+            "total_tweets_per_ask": 25, 
+            "positive_percentage": 50, 
+            "neutral_percentage": 30,
+            "negative_percentage": 20
+        },
+        {
+            "last_time": 10, 
+            "pause_time": 5, 
+            "total_tweets_per_ask": 25, 
+            "positive_percentage": 50, 
+            "neutral_percentage": 20,
+            "negative_percentage": 30
+        },
+        {
+            "last_time": 10, 
+            "pause_time": 5, 
+            "total_tweets_per_ask": 25, 
+            "positive_percentage": 60, 
+            "neutral_percentage": 20,
+            "negative_percentage": 20
+        },
+        {
+            "last_time": 10, 
+            "pause_time": 5, 
+            "total_tweets_per_ask": 25, 
+            "positive_percentage": 70, 
+            "neutral_percentage": 20,
+            "negative_percentage": 10
+        }
+    ]
+}

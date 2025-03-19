@@ -1,0 +1,42 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# namespace: match
+
+resources:
+- loadgen-job.yaml
+
+images:
+- name: "loadgen-job"
+  newName: asia-southeast1-docker.pkg.dev/multi-gke-ops/gke-repo/loadgen-job
+  newTag: latest
+
+patches:
+- patch: |-
+    - op: add
+      path: "/spec/template/spec/template/spec/containers/0/env/-"
+      value:
+        name: PROJECT_ID
+        value: "multi-gke-ops"
+    - op: add
+      path: "/spec/template/spec/template/spec/containers/0/env/-"
+      value:
+        name: LOCATION
+        value: "us-central1"
+    - op: add
+      path: "/spec/template/spec/template/spec/containers/0/env/-"
+      value:
+        name: MODEL_ID
+        value: "gemini-1.5-pro-002"
+    - op: add
+      path: "/spec/template/spec/template/spec/containers/0/env/-"
+      value:
+        name: POLICY_BUCKET
+        value: "simulating_policy_bucket-multi-gke-ops"
+    - op: add
+      path: "/spec/template/spec/template/spec/containers/0/env/-"
+      value:
+        name: SIMULATING_POLICY_FOLDER
+        value: "running_polices"
+  target:
+    kind: Job

@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# namespace: match
+
+resources:
+- scraping-job.yaml
+
+images:
+- name: "scraping-job"
+  newName: asia-southeast1-docker.pkg.dev/multi-gke-ops/gke-repo/scraping-job
+  newTag: latest

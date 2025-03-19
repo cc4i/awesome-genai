@@ -1,0 +1,33 @@
+apiVersion: run.googleapis.com/v1
+kind: Job
+metadata:
+  name: loadgen-job
+  annotations:
+    run.googleapis.com/launch-stage: BETA
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/client-name: cloud-console
+        run.googleapis.com/execution-environment: gen2
+        run.googleapis.com/vpc-access-egress: private-ranges-only
+        run.googleapis.com/network-interfaces: '[{"network":"demo-auto-vpc","subnetwork":"demo-auto-vpc"}]'
+    spec:
+      taskCount: 1
+      template:
+        spec:
+          containers:
+          - name: loadgen-job
+            image: loadgen-job
+            env:
+              # - name: TZ
+              #   value: "Asia/Singapore"
+              - name: APP_NAME
+                value: "loadgen-job"
+            resources:
+              limits:
+                cpu: 2000m
+                memory: 4Gi
+          maxRetries: 3
+          timeoutSeconds: '7200'
+          # serviceAccountName: 685974231709-compute@developer.gserviceaccount.com

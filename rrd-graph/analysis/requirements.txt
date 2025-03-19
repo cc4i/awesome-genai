@@ -1,0 +1,26 @@
+# General libraries
+requests==2.32.3
+uvicorn==0.30.1
+fastapi==0.115.0
+pytz==2024.1
+pg8000==1.31.2
+SQLAlchemy==2.0.31
+
+# GenAIs
+langgraph==0.2.39
+langchain-community==0.3.3
+langchain-google-genai==2.0.1
+langchain-google-vertexai==2.0.5
+pydantic==2.9.2
+anthropic==0.39.0
+
+
+# Cloud 
+google-cloud-run==0.10.8
+google-cloud-storage==2.18.2
+google-cloud-language==2.14.0
+google-cloud-aiplatform==1.70.0
+google-auth==2.30.0
+google-cloud-alloydb-connector==1.4.0
+
+

@@ -1,0 +1,16 @@
+apiVersion: skaffold/v4beta11
+kind: Config
+
+manifests:
+  rawYaml:
+    - resources/browserless-service.yaml
+
+deploy:
+  cloudrun:
+    projectid: multi-gke-ops
+    region: asia-southeast1
+
+profiles:
+- name: gcb
+  build:
+    googleCloudBuild: {}

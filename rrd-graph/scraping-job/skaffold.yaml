@@ -1,0 +1,22 @@
+apiVersion: skaffold/v4beta11
+kind: Config
+build:
+  artifacts:
+  - image: asia-southeast1-docker.pkg.dev/multi-gke-ops/gke-repo/scraping-job
+    buildpacks:
+      builder: "gcr.io/buildpacks/builder:v1"
+
+manifests:
+  kustomize:
+    paths:
+      - resources
+
+deploy:
+  cloudrun:
+    projectid: realtime-reputation-defender
+    region: us-central1
+
+profiles:
+- name: gcb
+  build:
+    googleCloudBuild: {}

@@ -1,0 +1,22 @@
+apiVersion: skaffold/v4beta11
+kind: Config
+build:
+  artifacts:
+  - image: us-central1-docker.pkg.dev/realtime-reputation-defender/rrd-repo/console
+    buildpacks:
+      builder: "gcr.io/buildpacks/builder:v1"
+
+manifests:
+  kustomize:
+    paths:
+      - resources
+
+deploy:
+  cloudrun:
+    projectid: multi-gke-ops
+    region: us-central1
+
+profiles:
+- name: gcb
+  build:
+    googleCloudBuild: {}

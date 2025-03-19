@@ -1,0 +1,26 @@
+apiVersion: run.googleapis.com/v1
+kind: Job
+metadata:
+  name: scraping-job
+  annotations:
+    run.googleapis.com/launch-stage: BETA
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/client-name: cloud-console
+        run.googleapis.com/execution-environment: gen2
+    spec:
+      taskCount: 1
+      template:
+        spec:
+          containers:
+          - name: scraping-job
+            image: scraping-job
+            resources:
+              limits:
+                cpu: 1000m
+                memory: 2Gi
+          maxRetries: 3
+          timeoutSeconds: '1800'
+          # serviceAccountName: 685974231709-compute@developer.gserviceaccount.com
