@@ -31,9 +31,9 @@ spec:
           limits:
             cpu: 4000m
             memory: 16Gi
-        # volumeMounts:
-        #   - name: attached-run-volume
-        #     mountPath: /tmp
+        volumeMounts:
+          - name: in-memory-storage
+            mountPath: /workspace/tmp
         startupProbe:
           initialDelaySeconds: 10
           timeoutSeconds: 240
@@ -41,10 +41,9 @@ spec:
           failureThreshold: 3
           tcpSocket:
             port: 7860
-      # volumes:
-      # - name: attached-run-volume
-      #   csi:
-      #     driver: gcsfuse.run.googleapis.com
-      #     volumeAttributes:
-      #       bucketName: my-veo2-testing
+      volumes:
+      - name: in-memory-storage
+        emptyDir:
+          medium: Memory
+          sizeLimit: 4G
 
