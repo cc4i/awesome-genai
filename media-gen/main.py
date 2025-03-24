@@ -15,8 +15,16 @@ from utils.gen_video import text_to_video
 from utils.gen_video import image_to_video
 from utils.gen_video import download_videos
 from utils.gen_video import upload_local_file_to_gcs
-from utils.llm import call_llm
+from utils.gen_video import random_video_prompt
+from utils.gen_video import rewrite_video_prompt
 from utils.ce_image import generate_image_by_gemini
+from utils.ce_image import random_image_prompt
+from utils.ce_image import rewrite_image_prompt
+
+
+gr.close_all()
+
+gr.set_static_paths(paths=["tmp/"])
 
 def sepia(input_image):
     sepia_filter = np.array([
@@ -40,20 +48,6 @@ def generate_images(model_id, prompt, aspect_ratio, sample_count, is_enhance):
 def show(input_image):
     return input_image
 
-def random_video_prompt():
-    return call_llm(
-        system_instruction="You're prompt engineer, your task is to create a best prompt for specific model from Google.",
-        prompt="Generate a random prompt to text-to-image for Google Veo2 to generate a creative, brilliant short video. Output as string only, without explanation.",
-        history=""
-    )
-
-def random_image_prompt():
-    return call_llm(
-        system_instruction="You're prompt engineer, your task is to create a best prompt for specific model from Google.",
-        prompt="Generate a random prompt to text-to-image for Google Imagen 3 to generate a creative, brilliant image. Output as string only, without explanation.",
-        history=""
-    )
-
 
 current_file_in_gcs=""
 veo_storage_bucket=os.getenv("VEO_STORAGE_BUCKET")
@@ -66,10 +60,14 @@ def upload_image(input_image_path):
 def generate_viodes(prompt, negative_prompt, type, aspect_ratio, seed, sample_count, enhance, durations):
     if type == "Text-to-Video":
         op, rr=text_to_video(prompt, seed = seed, aspect_ratio = aspect_ratio, sample_count = sample_count, output_gcs = f"gs://{veo_storage_bucket}/generated", negative_prompt=negative_prompt, enhance=enhance, durations=durations)
+        if op["response"].get("raiMediaFilteredReasons") is not None:
+            gr.Error(op["response"]["raiMediaFilteredReasons"])
         return download_videos(op), rr
     else:
         print(f"first image in the gcs: {current_file_in_gcs}")
         op, rr=image_to_video(prompt,current_file_in_gcs, seed, aspect_ratio, sample_count, f"gs://{veo_storage_bucket}/generated", negative_prompt=negative_prompt, enhance=enhance, durations=durations)
+        if op["response"].get("raiMediaFilteredReasons") is not None:
+            gr.Error(op["response"]["raiMediaFilteredReasons"])
         return download_videos(op), rr       
         
 
@@ -102,16 +100,19 @@ def bot_message(history, response_type):
                 "https://raw.githubusercontent.com/gradio-app/gradio/main/test/test_files/bus.png",
             ]
         )
-    elif response_type == "image":
+    elif response_type == "image & text":
         if len(history) >1 and history[-2][1] is not None:
-            saved_file, generated_image = generate_image_by_gemini(history[-1][0], save_files[-1])
+            saved_file, rtype = generate_image_by_gemini(history[-1][0], save_files[-1])
         else:
-            saved_file, generated_image = generate_image_by_gemini(history[-1][0], None)
-        gi = gr.Image(type="numpy", value=generated_image)
-        history[-1][1] = gi
-        save_files.append(saved_file)
-        print(f"save_files: {save_files}")
-    
+            saved_file, rtype = generate_image_by_gemini(history[-1][0], None)
+        if rtype == "image":
+            gi = gr.Image(type="filepath", value=saved_file)
+            history[-1][1] = gi
+            save_files.append(saved_file)
+            print(f"save_files: {save_files}")
+        else:
+            history[-1][1] = saved_file
+
     elif response_type == "video":
         history[-1][1] = gr.Video(
             "https://github.com/gradio-app/gradio/raw/main/demo/video_component/files/world.mp4"
@@ -128,10 +129,23 @@ def bot_message(history, response_type):
         history[-1][1] = "Cool!"
     return history
 
+def delete_temp_files():
+    for s_file in save_files:
+        if os.path.exists(s_file):
+            print(f"delete {s_file}")
+            os.remove(s_file)
+            save_files.remove(s_file)
+    
+    if os.path.exists("tmp"):
+        print("delete rest of files in tmp/*")
+        os.system("rm -rf tmp/*")
+    # return history, []
+    
+
 with gr.Blocks(theme=gr.themes.Soft()) as demo:
     gr.Markdown("""
                 # Creative GeN/Studio
-                Ignite the spark of your inner creator ... powered by CC
+                Ignite the spark of your inner creator ... powered by <b>CC</b>
                 """)
     # Videos
     with gr.Tab("Veo"):
@@ -158,7 +172,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
             dd_enhancement = gr.Dropdown(label="Enhancement", value="yes", choices=["yes", "no"], interactive=True)
             dd_duration = gr.Slider(5, 8, value=8, label="Duration", info="Length of video, 5-8s", step=1, interactive=True)
         with gr.Row():
-            gr.Button("Rewrite")
+            btn_rewrite_prompt_video = gr.Button(value="Rewrite", icon="images/painted-brush.png")
             btn_random_video_prompt=gr.Button("Random", icon="images/gemini-star.png")
             btn_generate_video = gr.Button("Generate", icon="images/gemini-star.png")
         with gr.Row():
@@ -180,7 +194,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
             di_sample_count = gr.Dropdown(label="Sample count", value="2", choices=["1", "2", "3", "4", "5"], interactive=True)
             di_enhancement = gr.Dropdown(label="Prompt Enhancement", choices=["yes", "no"], interactive=True)
         with gr.Row():
-            gr.Button("Rewrite")
+            btn_rewrite_prompt_image = gr.Button(value="Rewrite", icon= "images/painted-brush.png")
             btn_random_image_prompt = gr.Button("Random", icon="images/gemini-star.png")
             btn_generate_image = gr.Button("Generate", icon="images/gemini-star.png")
         with gr.Row():
@@ -188,42 +202,49 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
 
     with gr.Tab("Conversational editing"):
         with gr.Row():
-            cb_output = gr.Chatbot()
+            cb_output = gr.Chatbot(type="tuples")
         with gr.Row():
             response_type = gr.Radio(
                     [
-                        "image",
-                        "text",
+                        "image & text",
                         "gallery",
                         "video",
                         "audio",
                         "html",
                     ],
-                    value="image",
-                    label="Response Type",
+                    value="image & text",
+                    label="Response Type"
                 )
         with gr.Row():
             mt_input = gr.MultimodalTextbox(label="Ask ME")
-
+        with gr.Row():
+            btn_clear_cov=gr.ClearButton(icon="images/free-reboot-icon.png", value="", components=[mt_input, cb_output])
     with gr.Tab("Checking image"):
         with gr.Row():
-            input_checking_image = gr.Image()
-            gr.Interface(sepia, input_checking_image, "image")
+            input_checking_image = gr.Image(label="What YOU see")
+            gr.Interface(sepia, input_checking_image, gr.Image(label="Sepia"))
         with gr.Row():
-            what_you_see_image = gr.Image(label="what you see")
-            input_checking_image.change(show, inputs=input_checking_image, outputs=what_you_see_image)
+            what_models_see_image = gr.Image(label="What MODELs see")
+            input_checking_image.change(show, inputs=input_checking_image, outputs=what_models_see_image)
 
 
 
     input_first_image.upload(upload_image, inputs=input_first_image)
     btn_generate_video.click(generate_viodes, inputs=[tb_prompt_video, tb_negative_prompt, dd_type, dd_aspect_ratio, dd_seed, dd_sample_count, dd_enhancement, dd_duration], outputs=[video_gallery, rr_json])
     btn_random_video_prompt.click(random_video_prompt, outputs=[tb_prompt_video])
+    btn_rewrite_prompt_video.click(rewrite_video_prompt, inputs=[tb_prompt_video], outputs=[tb_prompt_video])
     btn_generate_image.click(generate_images, inputs=[imagen_model_id,tb_prompt_image, di_aspect_ratio, di_sample_count, di_enhancement], outputs=[image_gallery])
     btn_random_image_prompt.click(random_image_prompt, outputs=[tb_prompt_image])
+    btn_rewrite_prompt_image.click(rewrite_image_prompt, inputs=[tb_prompt_image], outputs=[tb_prompt_image])
+    
+    
     
     chat_msg = mt_input.submit(add_message, inputs=[cb_output, mt_input], outputs=[cb_output, mt_input])
     bot_msg = chat_msg.then(bot_message, inputs=[cb_output, response_type], outputs=[cb_output], api_name="bot_response")
     bot_msg.then(lambda: gr.MultimodalTextbox(interactive=True), None, [mt_input])
+    btn_clear_cov.click(delete_temp_files)
+
 
 if __name__ == "__main__":
+    # demo.launch(server_name="0.0.0.0", allowed_paths=[os.getenv("LOCAL_STORAGE")])
     demo.launch(server_name="0.0.0.0")

@@ -6,8 +6,10 @@ from PIL import Image
 from io import BytesIO
 import base64
 import io
-
+import uuid
 import PIL.Image
+from utils.llm import call_llm
+
 
 def save_binary_file(file_name, data):
     f = open(file_name, "wb")
@@ -55,11 +57,33 @@ def generate_image_by_gemini(prompt, last_image):
     for part in response.candidates[0].content.parts:
         if part.text is not None:
             print(part.text)
+            return part.text, "text"
         elif part.inline_data is not None:
             generated_image = Image.open(BytesIO((part.inline_data.data)))
-            saved_file = 'tmp/gemini-native-image.png'
+            local_storage = os.getenv("LOCAL_STORAGE")
+            print(f"local_storage: {local_storage}")
+            saved_file = f"{local_storage}/{str(uuid.uuid4())}-gemini-native-image.png"
             generated_image.save(saved_file)
-            return saved_file, generated_image
+            return saved_file, "image"
             # image.save('gemini-native-image.png')
             # image.show()
     
+
+def random_image_prompt():
+    return call_llm(
+        system_instruction="You're prompt engineer, your task is to create a best prompt for specific model from Google.",
+        prompt="Generate a random prompt to text-to-image for Google Imagen 3 to generate a creative, brilliant image. Output as string only, without explanation.",
+        history=""
+    )
+
+def rewrite_image_prompt(prompt):
+    return call_llm(
+        system_instruction="You're prompt engineer, your task is to create a best prompt for specific model from Google.",
+        prompt=f"""
+            Rewrite the followng prompt for Google Imagen 3 to generate the best image ever. Output as string only, without explanation.
+
+            *PROMPT*: 
+            {prompt}
+        """,
+        history=""
+    )

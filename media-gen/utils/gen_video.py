@@ -8,9 +8,13 @@ import requests
 from google.cloud import storage
 from io import BytesIO
 
-PROJECT_ID=os.getenv("VEO_PROJECT_ID")
+from utils.llm import call_llm
 
-video_model = f"https://us-central1-aiplatform.googleapis.com/v1beta1/projects/{PROJECT_ID}/locations/us-central1/publishers/google/models/veo-2.0-generate-001"
+
+VEO_PROJECT_ID=os.getenv("VEO_PROJECT_ID")
+LOCAL_STORAGE=os.getenv("LOCAL_STORAGE")
+
+video_model = f"https://us-central1-aiplatform.googleapis.com/v1beta1/projects/{VEO_PROJECT_ID}/locations/us-central1/publishers/google/models/veo-2.0-generate-001"
 prediction_endpoint = f"{video_model}:predictLongRunning"
 fetch_endpoint = f"{video_model}:fetchPredictOperation"
 
@@ -100,7 +104,8 @@ def text_to_video(prompt, seed, aspect_ratio, sample_count, output_gcs, negative
     resp = send_request_to_google_api(prediction_endpoint, req)
     print(resp)
     print(resp["name"])
-    return fetch_operation(resp["name"],30), {"req":req, "resp":resp}
+    r_resp = fetch_operation(resp["name"],30)
+    return r_resp, {"req":req, "resp":r_resp}
 
 
 def image_to_video(
@@ -112,7 +117,8 @@ def image_to_video(
     print(f"image_to_video: \n{req}")
     resp = send_request_to_google_api(prediction_endpoint, req)
     print(resp)
-    return fetch_operation(resp["name"], 30), {"req":req, "resp":resp}
+    r_resp = fetch_operation(resp["name"],30)
+    return r_resp, {"req":req, "resp":r_resp}
 
 
 # copy file from gcs to local file using python sdk
@@ -125,7 +131,7 @@ def copy_gcs_file_to_local(gcs_uri, local_file_path):
     """
 
     try:
-        client = storage.Client()
+        client = storage.Client(project=os.getenv("PROJECT_ID"))
         bucket_name, blob_name = gcs_uri.replace("gs://", "").split("/", 1)
         bucket = client.bucket(bucket_name)
         blob = bucket.blob(blob_name)
@@ -137,7 +143,7 @@ def copy_gcs_file_to_local(gcs_uri, local_file_path):
 # upload a local file to gcs
 def upload_local_file_to_gcs(bucket_name, sub_folder, local_file_path):
     try:
-        client = storage.Client()
+        client = storage.Client(project=os.getenv("PROJECT_ID"))
         bucket = client.bucket(bucket_name)
 
         local_file_path.split("/")
@@ -156,17 +162,18 @@ def upload_local_file_to_gcs(bucket_name, sub_folder, local_file_path):
 def download_videos(op):
     print(op)
     # create 'tmp' folder if not exist
-    if not os.path.exists("tmp"):
-        os.makedirs("tmp")
+    if not os.path.exists(LOCAL_STORAGE):
+        os.makedirs(LOCAL_STORAGE)
  
     l_files=[]
     if op["response"]:
-        for video in op["response"]["videos"]:
-            gcs_uri = video["gcsUri"]
-            file_name = "tmp/" + gcs_uri.split("/")[-1]
-            # !gsutil cp {gcs_uri} {file_name}
-            copy_gcs_file_to_local(gcs_uri, file_name)
-            l_files.append(file_name)
+        if op["response"].get("raiMediaFilteredReasons") is None:
+            for video in op["response"]["videos"]:
+                gcs_uri = video["gcsUri"]
+                file_name = f"{LOCAL_STORAGE}/" + gcs_uri.split("/")[-1]
+                # !gsutil cp {gcs_uri} {file_name}
+                copy_gcs_file_to_local(gcs_uri, file_name)
+                l_files.append(file_name)
     return l_files
 
 def show_sdk_video(op):
@@ -178,7 +185,27 @@ def show_sdk_video(op):
     if op.generate_videos_response.videos:
         for video in op.generate_videos_response.videos:
             gcs_uri = video.uri
-            file_name = "tmp/" + gcs_uri.split("/")[-1]
+            file_name = f"{LOCAL_STORAGE}/" + gcs_uri.split("/")[-1]
             # !gsutil cp {gcs_uri} {file_name}
             copy_gcs_file_to_local(gcs_uri, file_name)
             media.show_video(media.read_video(file_name), height=500)
+
+
+def random_video_prompt():
+    return call_llm(
+        system_instruction="You're prompt engineer, your task is to create a best prompt for specific model from Google.",
+        prompt="Generate a random prompt to text-to-image for Google Veo2 to generate a creative, brilliant short video. Output as string only, without explanation.",
+        history=""
+    )
+
+def rewrite_video_prompt(prompt):
+    return call_llm(
+        system_instruction="You're prompt engineer, your task is to create a best prompt for specific model from Google.",
+        prompt=f"""
+            Rewrite the followng prompt for Google Veo2 to generate the best short video ever. Output as string only, without explanation.
+
+            *PROMPT*: 
+            {prompt}
+        """,
+        history=""
+    )

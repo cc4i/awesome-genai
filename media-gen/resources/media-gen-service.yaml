@@ -14,8 +14,8 @@ spec:
         run.googleapis.com/startup-cpu-boost: 'true'
         run.googleapis.com/execution-environment: gen2
     spec:
-      containerConcurrency: 1
-      timeoutSeconds: 300
+      containerConcurrency: 10
+      timeoutSeconds: 600
       containers:
       - name: media-gen
         image: media-gen
@@ -29,12 +29,22 @@ spec:
           containerPort: 7860
         resources:
           limits:
-            cpu: 2
-            memory: 4096Mi
+            cpu: 4000m
+            memory: 16Gi
+        # volumeMounts:
+        #   - name: attached-run-volume
+        #     mountPath: /tmp
         startupProbe:
+          initialDelaySeconds: 10
           timeoutSeconds: 240
           periodSeconds: 240
           failureThreshold: 3
           tcpSocket:
             port: 7860
+      # volumes:
+      # - name: attached-run-volume
+      #   csi:
+      #     driver: gcsfuse.run.googleapis.com
+      #     volumeAttributes:
+      #       bucketName: my-veo2-testing
 
