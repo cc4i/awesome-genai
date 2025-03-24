@@ -69,6 +69,7 @@ MANIFEST  
 \#*\#
 .#[._]
 *.out
+tmp
 
 # Environment variables
 .env
@@ -98,3 +99,4 @@ rrd/populate-db
 
 #Credential
 application_default_credentials.json
+
