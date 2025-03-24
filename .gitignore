@@ -94,3 +94,7 @@ MANIFEST  
 # Specific to your project
 # Add any other files or directories that you want to ignore
 rrd/populate-db
+
+
+#Credential
+application_default_credentials.json

@@ -1,4 +1,5 @@
 import json
+import os
 import gradio as gr
 import pandas as pd
 import random
@@ -55,19 +56,20 @@ def random_image_prompt():
 
 
 current_file_in_gcs=""
+veo_storage_bucket=os.getenv("VEO_STORAGE_BUCKET")
 def upload_image(input_image_path):
     global current_file_in_gcs
     print(input_image_path)
-    current_file_in_gcs = upload_local_file_to_gcs("my-veo2-testing", "uploaded-images", input_image_path)
+    current_file_in_gcs = upload_local_file_to_gcs(f"{veo_storage_bucket}", "uploaded-images", input_image_path)
 
 
 def generate_viodes(prompt, negative_prompt, type, aspect_ratio, seed, sample_count, enhance, durations):
     if type == "Text-to-Video":
-        op, rr=text_to_video(prompt, seed = seed, aspect_ratio = aspect_ratio, sample_count = sample_count, output_gcs = "gs://my-veo2-testing/generated", negative_prompt=negative_prompt, enhance=enhance, durations=durations)
+        op, rr=text_to_video(prompt, seed = seed, aspect_ratio = aspect_ratio, sample_count = sample_count, output_gcs = f"gs://{veo_storage_bucket}/generated", negative_prompt=negative_prompt, enhance=enhance, durations=durations)
         return download_videos(op), rr
     else:
         print(f"first image in the gcs: {current_file_in_gcs}")
-        op, rr=image_to_video(prompt,current_file_in_gcs, seed, aspect_ratio, sample_count, "gs://my-veo2-testing/generated", negative_prompt=negative_prompt, enhance=enhance, durations=durations)
+        op, rr=image_to_video(prompt,current_file_in_gcs, seed, aspect_ratio, sample_count, f"gs://{veo_storage_bucket}/generated", negative_prompt=negative_prompt, enhance=enhance, durations=durations)
         return download_videos(op), rr       
         
 
