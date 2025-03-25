@@ -1,6 +1,6 @@
 import time
 import os
-
+import uuid
 import google.auth
 import google.auth.transport.requests
 import mediapy as media
@@ -159,18 +159,19 @@ def upload_local_file_to_gcs(bucket_name, sub_folder, local_file_path):
 
 
 
-def download_videos(op):
+def download_videos(op, whoami):
     print(op)
+    local_path = f"{LOCAL_STORAGE}/{whoami}"
     # create 'tmp' folder if not exist
-    if not os.path.exists(LOCAL_STORAGE):
-        os.makedirs(LOCAL_STORAGE)
+    if not os.path.exists(local_path):
+        os.makedirs(local_path)
  
     l_files=[]
     if op["response"]:
         if op["response"].get("raiMediaFilteredReasons") is None:
             for video in op["response"]["videos"]:
                 gcs_uri = video["gcsUri"]
-                file_name = f"{LOCAL_STORAGE}/" + gcs_uri.split("/")[-1]
+                file_name = f"{local_path}/{str(uuid.uuid4())}-" + gcs_uri.split("/")[-1]
                 # !gsutil cp {gcs_uri} {file_name}
                 copy_gcs_file_to_local(gcs_uri, file_name)
                 l_files.append(file_name)

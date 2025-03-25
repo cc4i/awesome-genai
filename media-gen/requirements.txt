@@ -4,6 +4,9 @@ fastapi==0.115.4
 gradio==5.21.0
 gradio_client==1.7.2
 python-dotenv==1.0.1
+starlette==0.41.3
+itsdangerous==2.2.0
+urllib3==2.2.3
 
 # GenAIs
 pydantic==2.10.6
@@ -12,6 +15,8 @@ mediapy==1.2.2
 
 # Cloud 
 google-auth==2.38.0
+# authlib
+authlib==1.5.1
 google-cloud-run==0.10.10
 google-cloud-scheduler==2.14.0
 google-cloud-storage==2.19.0

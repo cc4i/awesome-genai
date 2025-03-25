@@ -17,7 +17,7 @@ def save_binary_file(file_name, data):
     f.close()
 
 
-def generate_image_by_gemini(prompt, last_image):
+def generate_image_by_gemini(prompt, last_image, whoami):
     client = genai.Client(
         api_key=os.environ.get("GEMINI_API_KEY"),
     )
@@ -60,7 +60,7 @@ def generate_image_by_gemini(prompt, last_image):
             return part.text, "text"
         elif part.inline_data is not None:
             generated_image = Image.open(BytesIO((part.inline_data.data)))
-            local_storage = os.getenv("LOCAL_STORAGE")
+            local_storage = os.getenv("LOCAL_STORAGE") + f"/{whoami}"
             print(f"local_storage: {local_storage}")
             saved_file = f"{local_storage}/{str(uuid.uuid4())}-gemini-native-image.png"
             generated_image.save(saved_file)
