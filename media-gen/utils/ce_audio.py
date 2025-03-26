@@ -3,7 +3,7 @@ import os
 import mimetypes
 from google import genai
 from google.genai import types
-
+from models.config import GEMINI_API_KEY
 
 def save_binary_file(file_name, data):
     f = open(file_name, "wb")
@@ -13,7 +13,7 @@ def save_binary_file(file_name, data):
 
 def generate_audio_by_gemini(message):
     client = genai.Client(
-        api_key=os.environ.get("GEMINI_API_KEY"),
+        api_key=GEMINI_API_KEY,
     )
 
     model = "gemini-2.0-flash-exp-image-generation"

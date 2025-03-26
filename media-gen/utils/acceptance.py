@@ -12,6 +12,8 @@ def sepia(input_image):
     sepia_img /= sepia_img.max()
     return sepia_img
 
+def show(input_image):
+    return input_image
 
 def to_snake_case(input_string):
     """
@@ -19,7 +21,7 @@ def to_snake_case(input_string):
     and replacing everything else with underscores.
     """
     # Replace non-alphanumeric characters with underscores
-    s1 = re.sub(r'[^a-zA-Z0-9]+', '_', input_string)
+    s1 = re.sub(r'[^a-zA-Z0-9\.]+', '_', input_string)
     # Remove leading/trailing underscores
     s2 = s1.strip('_')
     # Convert to lowercase

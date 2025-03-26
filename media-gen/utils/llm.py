@@ -2,13 +2,7 @@ import asyncio
 import json
 from google import genai
 from google.genai import types
-import os
-
-
-
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"), http_options={'api_version': 'v1alpha'})
-model_id = "gemini-2.0-flash"
-
+from models.config import DEFAULT_MODEL_ID, GEMINI_API_KEY
 
 def string_to_pjson(json_string: str) -> str:
     try:
@@ -19,7 +13,8 @@ def string_to_pjson(json_string: str) -> str:
         print("Invalid JSON string")
         return None
     
-def call_llm(system_instruction, prompt, history, model_id=model_id):
+def call_llm(system_instruction, prompt, history, model_id=DEFAULT_MODEL_ID):
+    client = genai.Client(api_key=GEMINI_API_KEY, http_options={'api_version': 'v1alpha'})
     generate_content_config = types.GenerateContentConfig(
         temperature=0.7,
         top_p=0.95,

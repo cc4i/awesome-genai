@@ -9,7 +9,7 @@ import io
 import uuid
 import PIL.Image
 from utils.llm import call_llm
-
+from models.config import GEMINI_API_KEY
 
 def save_binary_file(file_name, data):
     f = open(file_name, "wb")
@@ -19,7 +19,7 @@ def save_binary_file(file_name, data):
 
 def generate_image_by_gemini(prompt, last_image, whoami):
     client = genai.Client(
-        api_key=os.environ.get("GEMINI_API_KEY"),
+        api_key=GEMINI_API_KEY,
     )
 
     model_id = "gemini-2.0-flash-exp-image-generation"

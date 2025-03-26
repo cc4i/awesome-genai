@@ -9,10 +9,11 @@ from google.cloud import storage
 from io import BytesIO
 
 from utils.llm import call_llm
+from models.config import VEO_PROJECT_ID, LOCAL_STORAGE
+from utils.acceptance import to_snake_case
 
 
-VEO_PROJECT_ID=os.getenv("VEO_PROJECT_ID")
-LOCAL_STORAGE=os.getenv("LOCAL_STORAGE")
+
 
 video_model = f"https://us-central1-aiplatform.googleapis.com/v1beta1/projects/{VEO_PROJECT_ID}/locations/us-central1/publishers/google/models/veo-2.0-generate-001"
 prediction_endpoint = f"{video_model}:predictLongRunning"
@@ -147,7 +148,7 @@ def upload_local_file_to_gcs(bucket_name, sub_folder, local_file_path):
         bucket = client.bucket(bucket_name)
 
         local_file_path.split("/")
-        blob_name = local_file_path.split("/")[-1]
+        blob_name = to_snake_case(local_file_path.split("/")[-1])
         if sub_folder:
             blob_name = f"{sub_folder}/{blob_name}"
         blob = bucket.blob(blob_name)

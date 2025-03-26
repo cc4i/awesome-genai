@@ -8,14 +8,11 @@ from urllib.parse import urlparse, urlunparse
 # import uvicorn
 import gradio as gr
 from utils.acceptance import to_snake_case
+from models.config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SECRET_KEY
+
 
 # Fast
 app = FastAPI()
-
-# Replace these with your own OAuth settings
-GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
-GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET')
-SECRET_KEY = os.environ.get('SECRET_KEY')
 
 config_data = {'GOOGLE_CLIENT_ID': GOOGLE_CLIENT_ID, 'GOOGLE_CLIENT_SECRET': GOOGLE_CLIENT_SECRET}
 starlette_config = Config(environ=config_data)
@@ -51,6 +48,7 @@ async def logout(request: Request):
 @app.route('/login')
 async def login(request: Request):
     redirect_uri = request.url_for('auth')
+    print(f"redirect_uri: {redirect_uri}")
     # If your app is running on https, you should ensure that the
     # `redirect_uri` is https, e.g. uncomment the following lines:
     #
@@ -80,12 +78,3 @@ def greet(request: gr.Request):
         Ignite the spark of <b>{request.username}</b>'s inner creator ... powered by <b>CC</b>
     """, to_snake_case(request.username)
 
-# with gr.Blocks() as main_demo:
-#     m = gr.Markdown("Welcome to Gradio!")
-#     gr.Button("Logout", link="/logout")
-#     main_demo.load(greet, None, m)
-
-# app = gr.mount_gradio_app(app, main_demo, path="/gradio", auth_dependency=get_user)
-
-# if __name__ == '__main__':
-#     uvicorn.run(app)
