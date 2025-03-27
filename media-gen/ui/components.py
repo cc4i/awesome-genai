@@ -77,7 +77,7 @@ def create_video_tab() -> Tuple[gr.Tab, List[Any]]:
             dd_aspect_ratio = gr.Dropdown(
                 label="Aspect ratio",
                 value=DEFAULT_ASPECT_RATIO,
-                choices=ASPECT_RATIOS,
+                choices=[ASPECT_RATIOS[1], ASPECT_RATIOS[2]],
                 interactive=True
             )
             dd_seed = gr.Textbox(

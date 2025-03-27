@@ -176,7 +176,7 @@ def generate_videos(
             print(f"first image in the gcs: {file_in_gcs}")
             op, rr = image_to_video(
                 prompt=prompt,
-                file_in_gcs=file_in_gcs,
+                image_gcs=file_in_gcs,
                 seed=seed,
                 aspect_ratio=aspect_ratio,
                 sample_count=sample_count,
