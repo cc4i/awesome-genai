@@ -10,7 +10,7 @@
 - Claude
 
 ## Demo
-- Media Gen
-- Realtime Reputation Defender
-- Trend Spotting
-- Play Farkle with Gemini
+- [Media Gen](./media-gen)
+- [Realtime Reputation Defender](./reputation-defender)
+- [Trend Spotting](./trend-spotting)
+- [Play Farkle with Gemini](./farkle)
