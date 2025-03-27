@@ -267,7 +267,11 @@ def create_chat_tab() -> Tuple[gr.Tab, List[Any]]:
     """
     with gr.Tab("Conversational editing") as chat_tab:
         with gr.Row():
-            cb_output = gr.Chatbot(type="tuples")
+            cb_output = gr.Chatbot(
+                type="tuples", 
+                height=560, 
+                resizeable=True
+            )
         with gr.Row():
             response_type = gr.Radio(
                 [
@@ -302,7 +306,7 @@ def create_checking_tab() -> Tuple[gr.Tab, List[Any]]:
     with gr.Tab("Checking image") as checking_tab:
         with gr.Row():
             input_checking_image = gr.Image(label="What YOU see")
-            gr.Interface(sepia, input_checking_image, gr.Image(label="Sepia"))
+            gr.Interface(sepia, input_checking_image, gr.Image(label="Sepia"), flagging_mode="never")
         with gr.Row():
             what_models_see_image = gr.Image(label="What MODELs see")
             input_checking_image.change(show, inputs=input_checking_image, outputs=what_models_see_image)
