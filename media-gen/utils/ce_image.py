@@ -1,82 +1,138 @@
+"""
+Image generation utilities using Google's Gemini model.
+"""
+
 import os
+import logging
+import uuid
+from typing import Tuple, Optional, Union
+from pathlib import Path
 
 from google import genai
 from google.genai import types
 from PIL import Image
 from io import BytesIO
-import base64
-import io
-import uuid
 import PIL.Image
+
 from utils.llm import call_llm
-from models.config import GEMINI_API_KEY
+from models.config import GEMINI_API_KEY, LOCAL_STORAGE
+from models.exceptions import APIError, StorageError
 
-def save_binary_file(file_name, data):
-    f = open(file_name, "wb")
-    f.write(data)
-    f.close()
+from utils.logger import logger
+
+# Constants
+MODEL_ID = "gemini-2.0-flash-exp-image-generation"
+MAX_OUTPUT_TOKENS = 8192
+TEMPERATURE = 1
+TOP_P = 0.95
+TOP_K = 40
 
 
-def generate_image_by_gemini(prompt, last_image, whoami):
-    client = genai.Client(
-        api_key=GEMINI_API_KEY,
-    )
 
-    model_id = "gemini-2.0-flash-exp-image-generation"
-    if last_image is None:
+def generate_image_by_gemini(
+    prompt: str,
+    last_image: Optional[str],
+    whoami: str
+) -> Tuple[Union[str, None], str]:
+    """
+    Generates an image using Google's Gemini model.
+
+    Args:
+        prompt: Text prompt for image generation
+        last_image: Optional path to previous image for context
+        whoami: User identifier for storage path
+
+    Returns:
+        Tuple containing:
+        - Generated image path or text response
+        - Response type ("image" or "text")
+
+    Raises:
+        APIError: If the API request fails
+        StorageError: If file operations fail
+    """
+    try:
+        client = genai.Client(api_key=GEMINI_API_KEY)
+
+        # Prepare content based on whether there's a previous image
         contents = [prompt]
-    else:
-        contents = [
-            prompt,
-            PIL.Image.open(last_image)
-        ]
-    generate_content_config = types.GenerateContentConfig(
-        temperature=1,
-        top_p=0.95,
-        top_k=40,
-        max_output_tokens=8192,
-        response_modalities=[
-            "image",
-            "text",
-        ],
-        safety_settings=[
-            types.SafetySetting(
-                category="HARM_CATEGORY_CIVIC_INTEGRITY",
-                threshold="OFF",  # Off
-            ),
-        ],
-        response_mime_type="text/plain",
-    )
+        if last_image:
+            contents.append(PIL.Image.open(last_image))
 
-    response = client.models.generate_content(
-        model=model_id,
-        contents=contents,
-        config=generate_content_config
-    )
+        # Configure generation parameters
+        generate_content_config = types.GenerateContentConfig(
+            temperature=TEMPERATURE,
+            top_p=TOP_P,
+            top_k=TOP_K,
+            max_output_tokens=MAX_OUTPUT_TOKENS,
+            response_modalities=["image", "text"],
+            safety_settings=[
+                types.SafetySetting(
+                    category="HARM_CATEGORY_CIVIC_INTEGRITY",
+                    threshold="OFF",
+                ),
+            ],
+            response_mime_type="text/plain",
+        )
 
-    for part in response.candidates[0].content.parts:
-        if part.text is not None:
-            print(part.text)
-            return part.text, "text"
-        elif part.inline_data is not None:
-            generated_image = Image.open(BytesIO((part.inline_data.data)))
-            local_storage = os.getenv("LOCAL_STORAGE") + f"/{whoami}"
-            print(f"local_storage: {local_storage}")
-            saved_file = f"{local_storage}/{str(uuid.uuid4())}-gemini-native-image.png"
-            generated_image.save(saved_file)
-            return saved_file, "image"
-            # image.save('gemini-native-image.png')
-            # image.show()
-    
+        # Generate content
+        logger.info(f"Generating image with prompt: {prompt}")
+        response = client.models.generate_content(
+            model=MODEL_ID,
+            contents=contents,
+            config=generate_content_config
+        )
 
-def random_image_prompt():
+        # Process response
+        for part in response.candidates[0].content.parts:
+            if part.text is not None:
+                logger.info("Received text response")
+                return part.text, "text"
+            elif part.inline_data is not None:
+                try:
+                    # Create user storage directory
+                    local_storage = Path(LOCAL_STORAGE) / whoami
+                    local_storage.mkdir(parents=True, exist_ok=True)
+                    
+                    # Save generated image
+                    generated_image = Image.open(BytesIO(part.inline_data.data))
+                    saved_file = local_storage / f"{uuid.uuid4()}-gemini-native-image.png"
+                    generated_image.save(saved_file)
+                    logger.info(f"Generated image saved to {saved_file}")
+                    return str(saved_file), "image"
+                except Exception as e:
+                    logger.error(f"Error saving generated image: {str(e)}")
+                    raise StorageError(f"Failed to save generated image: {str(e)}")
+
+        raise APIError("No valid response received from Gemini API")
+
+    except Exception as e:
+        logger.error(f"Error in image generation: {str(e)}")
+        raise APIError(f"Failed to generate image: {str(e)}")
+
+def random_image_prompt() -> str:
+    """
+    Generates a random prompt for image generation using LLM.
+
+    Returns:
+        A randomly generated prompt string
+    """
     return call_llm(
         system_instruction="You're prompt engineer, your task is to create a best prompt for specific model from Google.",
         prompt="Generate a random prompt to text-to-image for Google Imagen 3 to generate a creative, brilliant image. Output as string only, without explanation.",
         history=""
     )
 
-def rewrite_image_prompt(prompt):
+def rewrite_image_prompt(prompt: str) -> str:
+    """
+    Rewrites an image prompt to improve its quality using LLM.
+
+    Args:
+        prompt: The original prompt to improve
+
+    Returns:
+        An improved version of the prompt
+    """
     return call_llm(
         system_instruction="You're prompt engineer, your task is to create a best prompt for specific model from Google.",
         prompt=f"""

@@ -4,6 +4,10 @@ import pandas as pd
 from random import random, randint
 from PIL import Image
 from io import BytesIO
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 from utils.llm import gen_images
 from utils.llm import call_llm

@@ -12,7 +12,7 @@ from utils.logger import logger
 from utils.gen_image import gen_images
 from utils.gen_video import text_to_video, image_to_video, download_videos
 from utils.gen_video import upload_local_file_to_gcs
-from models.exceptions import FileUploadError, GenerationError
+from models.exceptions import FileUploadError, GenerationError, ValidationError
 from models.config import (
     VEO_STORAGE_BUCKET,
     MAX_FILE_SIZE,
@@ -130,22 +130,22 @@ def generate_videos(
     negative_prompt: str,
     type: str,
     aspect_ratio: str,
-    seed: int,
+    seed: str,
     sample_count: int,
     enhance: bool,
     durations: int
 ) -> Tuple[List[str], Dict[str, Any]]:
     """
-    Generate videos using text or image input.
+    Generate videos using either text or image input.
     
     Args:
         whoami: User identifier
         file_in_gcs: GCS path of input image (for image-to-video)
-        prompt: Text prompt for video generation
-        negative_prompt: Negative prompt for video generation
+        prompt: Text prompt for generation
+        negative_prompt: Negative prompt for generation
         type: Type of video generation ("Text-to-Video" or "Image-to-Video")
-        aspect_ratio: Desired aspect ratio
-        seed: Random seed for generation
+        aspect_ratio: Video aspect ratio
+        seed: Random seed for generation (as string from UI)
         sample_count: Number of videos to generate
         enhance: Whether to apply enhancement
         durations: Duration of each video in seconds
@@ -157,6 +157,7 @@ def generate_videos(
         GenerationError: If video generation fails
     """
     try:
+            
         output_gcs = f"gs://{VEO_STORAGE_BUCKET}/generated"
         
         if type == "Text-to-Video":
@@ -170,11 +171,12 @@ def generate_videos(
                 enhance=enhance,
                 durations=durations
             )
+            return download_videos(op, whoami), rr
         else:
-            logger.info(f"Using image from GCS: {file_in_gcs}")
+            print(f"first image in the gcs: {file_in_gcs}")
             op, rr = image_to_video(
                 prompt=prompt,
-                image_gcs=file_in_gcs,
+                file_in_gcs=file_in_gcs,
                 seed=seed,
                 aspect_ratio=aspect_ratio,
                 sample_count=sample_count,
@@ -183,11 +185,7 @@ def generate_videos(
                 enhance=enhance,
                 durations=durations
             )
-            
-        if op["response"].get("raiMediaFilteredReasons") is not None:
-            gr.Error(op["response"]["raiMediaFilteredReasons"])
-            
-        return download_videos(op, whoami), rr
+            return download_videos(op, whoami), rr
     except Exception as e:
         logger.error(f"Failed to generate videos: {str(e)}")
         raise GenerationError(f"Video generation failed: {str(e)}")
