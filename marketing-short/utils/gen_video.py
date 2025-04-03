@@ -5,21 +5,19 @@ Video generation utilities using Google's Veo 2.0 model.
 import time
 import os
 import uuid
-import logging
-import cv2
 from typing import Dict, List, Optional, Tuple, Any
 import google.auth
-import google.auth.transport.requests
 import mediapy as media
 import requests
-from google.cloud import storage
 from io import BytesIO
+import re
+
+import google.auth.transport.requests
+from google.cloud import storage
 
 from utils.llm import call_llm
-from models.config import VEO_PROJECT_ID, LOCAL_STORAGE
-from utils.acceptance import to_snake_case
-from models.exceptions import APIError, StorageError
-
+from models.config import VEO_PROJECT_ID, LOCAL_STORAGE, VEO_STORAGE_BUCKET, PROJECT_ID
+from models.exceptions import APIError, StorageError, FileUploadError
 from utils.logger import logger
 
 
@@ -33,6 +31,46 @@ fetch_endpoint = f"{video_model}:fetchPredictOperation"
 VIDEO_GENERATION_TIMEOUT = 300  # 5 minutes
 POLLING_INTERVAL = 10
 MAX_RETRIES = 30
+
+
+
+def to_snake_case(input_string):
+    """
+    Converts a string to snake_case, keeping only numbers and letters,
+    and replacing everything else with underscores.
+    """
+    # Replace non-alphanumeric characters with underscores
+    s1 = re.sub(r'[^a-zA-Z0-9\.]+', '_', input_string)
+    # Remove leading/trailing underscores
+    s2 = s1.strip('_')
+    # Convert to lowercase
+    s3 = s2.lower()
+    return s3
+
+def upload_image(input_image_path: str, whoami: str) -> str:
+    """
+    Upload an image to Google Cloud Storage.
+    
+    Args:
+        input_image_path: Path to the image file
+        whoami: User identifier
+        
+    Returns:
+        GCS path of the uploaded file
+        
+    Raises:
+        FileUploadError: If upload fails
+    """
+    try:
+        logger.info(f"Uploading image: {input_image_path} for user: {whoami}")
+        return upload_local_file_to_gcs(
+            f"{VEO_STORAGE_BUCKET}", 
+            f"uploaded-images-for-marketing-short/{whoami}", 
+            input_image_path
+        )
+    except Exception as e:
+        logger.error(f"Failed to upload image: {str(e)}")
+        raise FileUploadError(f"Failed to upload image: {str(e)}")
 
 def send_request_to_google_api(api_endpoint: str, data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """
@@ -244,7 +282,7 @@ def copy_gcs_file_to_local(gcs_uri: str, local_file_path: str) -> None:
         StorageError: If the file copy operation fails
     """
     try:
-        client = storage.Client(project=os.getenv("PROJECT_ID"))
+        client = storage.Client(project=PROJECT_ID)
         bucket_name, blob_name = gcs_uri.replace("gs://", "").split("/", 1)
         bucket = client.bucket(bucket_name)
         blob = bucket.blob(blob_name)
@@ -270,7 +308,7 @@ def upload_local_file_to_gcs(bucket_name: str, sub_folder: str, local_file_path:
         StorageError: If the upload operation fails
     """
     try:
-        client = storage.Client(project=os.getenv("PROJECT_ID"))
+        client = storage.Client(project=PROJECT_ID)
         bucket = client.bucket(bucket_name)
 
         blob_name = to_snake_case(local_file_path.split("/")[-1])
@@ -285,7 +323,7 @@ def upload_local_file_to_gcs(bucket_name: str, sub_folder: str, local_file_path:
         logger.error(f"Error uploading file: {str(e)}")
         raise StorageError(f"Failed to upload file to GCS: {str(e)}")
 
-def download_videos(op: Dict[str, Any], whoami: str) -> List[str]:
+def download_videos(op: Dict[str, Any], whoami: str, order: str) -> List[str]:
     """
     Downloads generated videos from GCS to local storage.
 
@@ -315,7 +353,7 @@ def download_videos(op: Dict[str, Any], whoami: str) -> List[str]:
             if op["response"].get("raiMediaFilteredReasons") is None:
                 for video in op["response"]["videos"]:
                     gcs_uri = video["gcsUri"]
-                    file_name = f"{local_path}/{str(uuid.uuid4())}-" + gcs_uri.split("/")[-1]
+                    file_name = f"{local_path}/{order}-{str(uuid.uuid4())}-" + gcs_uri.split("/")[-1]
                     try:
                         copy_gcs_file_to_local(gcs_uri, file_name)
                         l_files.append(file_name)
@@ -357,102 +395,3 @@ def rewrite_video_prompt(prompt: str) -> str:
         """,
         history=""
     )
-
-
-
-
-def make_video_cyclic(input_video_path, output_video_path):
-    """
-    Reads an input video and creates a new video where the last frame
-    is identical to the first frame, making it visually loopable.
-
-    Args:
-        input_video_path (str): Path to the input video file.
-        output_video_path (str): Path where the cyclic output video will be saved.
-    """
-    # --- 1. Open Input Video ---
-    cap = cv2.VideoCapture(input_video_path)
-    if not cap.isOpened():
-        print(f"Error: Could not open input video file: {input_video_path}")
-        return
-
-    # --- 2. Get Video Properties ---
-    fps = cap.get(cv2.CAP_PROP_FPS)
-    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) # Get total frames
-
-    if frame_count < 1:
-         print(f"Error: Video file seems empty or invalid: {input_video_path}")
-         cap.release()
-         return
-
-    print(f"Input video properties: {width}x{height} @ {fps:.2f} FPS, {frame_count} frames")
-
-    # --- 3. Read and Store First Frame ---
-    ret, first_frame = cap.read()
-    if not ret:
-        print("Error: Could not read the first frame.")
-        cap.release()
-        return
-
-    # --- 4. Prepare Output Video Writer ---
-    # Choose a codec (common options: 'mp4v', 'XVID', 'MJPG')
-    # 'mp4v' is widely compatible for .mp4 files
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter(output_video_path, fourcc, fps, (width, height))
-
-    if not out.isOpened():
-        print(f"Error: Could not open output video file for writing: {output_video_path}")
-        cap.release()
-        return
-
-    print(f"Writing output to: {output_video_path}")
-
-    # --- 5. Write First Frame to Output ---
-    out.write(first_frame)
-    frames_written = 1
-
-    # --- 6. Process Intermediate Frames ---
-    # We've already read the first frame, so we start reading from the second
-    # We need to keep track of the 'previous' frame read to write it,
-    # because we don't know if the *current* frame is the last one until we try reading the *next* one.
-
-    previous_frame = first_frame # Initialize previous_frame for the loop logic
-
-    while True:
-        ret, current_frame = cap.read()
-
-        # If we successfully read a frame (it's not the end)
-        if ret:
-            # Write the frame we read in the *previous* iteration
-            # (This skips writing the actual last frame from the input file)
-             if frames_written > 1 : # Avoid writing the first frame twice initially
-                 out.write(previous_frame)
-                 frames_written += 1
-
-            # Update previous_frame for the next iteration
-             previous_frame = current_frame.copy() # Use copy to avoid issues
-
-             # Simple progress indicator
-             if frames_written % int(fps * 5) == 0: # Print every 5 seconds approx
-                progress = (frames_written / frame_count) * 100
-                print(f"  Processed {frames_written}/{frame_count} frames ({progress:.1f}%)...")
-
-        # If we reached the end of the input video
-        else:
-            # Write the stored *first_frame* as the very last frame
-            # instead of the 'previous_frame' (which was the actual last frame)
-            print(f"  Reached end of input. Writing first frame as last frame...")
-            out.write(first_frame)
-            frames_written += 1
-            break # Exit the loop
-
-    # --- 7. Release Resources ---
-    cap.release()
-    out.release()
-    cv2.destroyAllWindows() # Good practice, though not strictly needed here
-
-    print(f"Finished! Cyclic video saved to {output_video_path}")
-    print(f"Total frames written: {frames_written}")
-
