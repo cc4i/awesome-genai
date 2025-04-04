@@ -14,3 +14,4 @@
 - [Realtime Reputation Defender](./reputation-defender)
 - [Trend Spotting](./trend-spotting)
 - [Play Farkle with Gemini](./farkle)
+- [Marketing Short](./marketing-short)
