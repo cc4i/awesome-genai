@@ -285,7 +285,7 @@ def upload_local_file_to_gcs(bucket_name: str, sub_folder: str, local_file_path:
         logger.error(f"Error uploading file: {str(e)}")
         raise StorageError(f"Failed to upload file to GCS: {str(e)}")
 
-def download_videos(op: Dict[str, Any], whoami: str) -> List[str]:
+def download_videos(op: Dict[str, Any], whoami: str, loop_seamless: bool) -> List[str]:
     """
     Downloads generated videos from GCS to local storage.
 
@@ -316,9 +316,15 @@ def download_videos(op: Dict[str, Any], whoami: str) -> List[str]:
                 for video in op["response"]["videos"]:
                     gcs_uri = video["gcsUri"]
                     file_name = f"{local_path}/{str(uuid.uuid4())}-" + gcs_uri.split("/")[-1]
+                    file_name_loop_seamless = f"{local_path}/{str(uuid.uuid4())}-loop_seamless-" + gcs_uri.split("/")[-1]
                     try:
                         copy_gcs_file_to_local(gcs_uri, file_name)
-                        l_files.append(file_name)
+                        
+                        if loop_seamless:
+                            make_video_cyclic(file_name, file_name_loop_seamless)
+                            l_files.append(file_name_loop_seamless)
+                        else:
+                            l_files.append(file_name)
                     except StorageError as e:
                         logger.error(f"Failed to download video: {str(e)}")
                         continue

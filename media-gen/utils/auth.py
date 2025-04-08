@@ -8,7 +8,7 @@ from urllib.parse import urlparse, urlunparse
 # import uvicorn
 import gradio as gr
 from utils.acceptance import to_snake_case
-from models.config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SECRET_KEY
+from models.config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SECRET_KEY, DEV_MODE
 
 
 # Fast
@@ -73,8 +73,13 @@ with gr.Blocks(theme=gr.themes.Glass(), title="Creative GeN/Studio") as login_de
 app = gr.mount_gradio_app(app, login_demo, path="/main")
 
 def greet(request: gr.Request):
+    if DEV_MODE == "true":
+        username = "default"
+    else:
+        username = request.username
+    
     return f"""
         # Creative GeN/Studio
-        Ignite the spark of <b>{request.username}</b>'s inner creator ... powered by <b>CC</b>
-    """, to_snake_case(request.username)
+        Ignite the spark of <b>{username}</b>'s inner creator ... powered by <b>CC</b>
+    """, to_snake_case(username)
 

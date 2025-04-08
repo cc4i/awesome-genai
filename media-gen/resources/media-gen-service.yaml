@@ -26,6 +26,20 @@ spec:
             value: "media-gen"
           - name: SECRET_KEY
             value: "httpsecretkey"
+          - name: GEMINI_API_KEY
+            value: "${GEMINI_API_KEY}"
+          - name: VEO_PROJECT_ID
+            value: "${VEO_PROJECT_ID}"
+          - name: VEO_STORAGE_BUCKET
+            value: "${VEO_STORAGE_BUCKET}"
+          - name: DEFAULT_MODEL_ID
+            value: "${DEFAULT_MODEL_ID}"
+          - name: PROJECT_ID
+            value: "${PROJECT_ID}"
+          - name: GOOGLE_CLIENT_ID
+            value: "${GOOGLE_CLIENT_ID}"
+          - name: GOOGLE_CLIENT_SECRET
+            value: "${GOOGLE_CLIENT_SECRET}"
         ports:
         - name: http1
           containerPort: 8000

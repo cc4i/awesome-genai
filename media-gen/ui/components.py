@@ -107,7 +107,7 @@ def create_video_tab() -> Tuple[gr.Tab, List[Any]]:
                 interactive=True
             )
         with gr.Row():
-            gr.Checkbox(
+            cb_loop_seamless = gr.Checkbox(
                 label="Video loop seamless(add first frame to the end)",
                 value=False,
                 interactive=True
@@ -148,6 +148,7 @@ def create_video_tab() -> Tuple[gr.Tab, List[Any]]:
         dd_sample_count,
         dd_enhancement,
         dd_duration,
+        cb_loop_seamless,
         btn_rewrite_prompt_video,
         btn_random_video_prompt,
         btn_generate_video,

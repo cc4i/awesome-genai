@@ -22,7 +22,7 @@ from handlers.chat_handlers import add_message, bot_message
 from utils.gen_video import random_video_prompt, rewrite_video_prompt
 from utils.ce_image import random_image_prompt, rewrite_image_prompt
 from utils.logger import logger
-from models.config import validate_config, LOCAL_STORAGE
+from models.config import validate_config, LOCAL_STORAGE, DEV_MODE
 from models.exceptions import ConfigurationError
 
 # Validate configuration
@@ -67,6 +67,7 @@ with gr.Blocks(theme=gr.themes.Glass(), title="Creative GeN/Studio") as demo:
         dd_sample_count,
         dd_enhancement,
         dd_duration,
+        cb_loop_seamless,
         btn_rewrite_prompt_video,
         btn_random_video_prompt,
         btn_generate_video,
@@ -111,7 +112,8 @@ with gr.Blocks(theme=gr.themes.Glass(), title="Creative GeN/Studio") as demo:
             dd_seed,
             dd_sample_count,
             dd_enhancement,
-            dd_duration
+            dd_duration,
+            cb_loop_seamless
         ],
         outputs=[video_gallery, rr_json]
     )
@@ -180,7 +182,10 @@ with gr.Blocks(theme=gr.themes.Glass(), title="Creative GeN/Studio") as demo:
     demo.load(greet, None, outputs=[cgs_markdone, tb_whoami])
 
 # Mount the Gradio app
-app = gr.mount_gradio_app(app, demo, path="/gradio", auth_dependency=get_user)
+if DEV_MODE != "true":
+    app = gr.mount_gradio_app(app, demo, path="/gradio", auth_dependency=get_user)
+else:
+    app = gr.mount_gradio_app(app, demo, path="/gradio")
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0")

@@ -133,7 +133,8 @@ def generate_videos(
     seed: str,
     sample_count: int,
     enhance: bool,
-    durations: int
+    durations: int,
+    loop_seamless: bool
 ) -> Tuple[List[str], Dict[str, Any]]:
     """
     Generate videos using either text or image input.
@@ -171,7 +172,7 @@ def generate_videos(
                 enhance=enhance,
                 durations=durations
             )
-            return download_videos(op, whoami), rr
+            return download_videos(op, whoami, loop_seamless), rr
         else:
             print(f"first image in the gcs: {file_in_gcs}")
             op, rr = image_to_video(
@@ -185,7 +186,7 @@ def generate_videos(
                 enhance=enhance,
                 durations=durations
             )
-            return download_videos(op, whoami), rr
+            return download_videos(op, whoami, loop_seamless), rr
     except Exception as e:
         logger.error(f"Failed to generate videos: {str(e)}")
         raise GenerationError(f"Video generation failed: {str(e)}")

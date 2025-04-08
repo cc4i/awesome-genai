@@ -45,16 +45,23 @@ git clone https://github.com/cc4i/awesome-genai.git
 cd awesome-genai/media-gen
 ```
 
+2. Set up Google Cloud credentials:
+   - Place your `application_default_credentials.json` in the project root
+   - Ensure you have the necessary permissions for Google Cloud Storage
 
-2. Set up environment variables:
+3. Set up [OAuth 2.0](https://support.google.com/googleapi/answer/6158849?hl=en) in [Google Cloud Console](https://console.developers.google.com/).
+    - Oauth consent screen
+    - Create a client with following settings :
+      - Authorised JavaScript origins: http://<Domain of Cloud Run>:8000
+      - Authorised redirect URIs: http://<Domain of Cloud Run>:8000/auth & http://<Domain of Cloud Run>:8000/login
+    - Notes Client ID and Client Secret
+
+4. Set up environment variables:
    - Copy `.env.example` to `.env`
    - Fill in your API keys and configuration.
 
 
 
-3. Set up Google Cloud credentials:
-   - Place your `application_default_credentials.json` in the project root
-   - Ensure you have the necessary permissions for Google Cloud Storage
 
 
 4. Install dependencies:

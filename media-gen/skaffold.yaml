@@ -1,11 +1,21 @@
 apiVersion: skaffold/v4beta11
 kind: Config
 build:
+  tagPolicy:
+    customTemplate:
+      # template: "{{env \"RELEASE_TAG\"}}-{{.GIT_COMMIT_SHORT}}"
+      template: "v1-{{.GIT_COMMIT_SHORT}}"
+      components: # Define components used in the template
+       - name: GIT_COMMIT_SHORT
+         gitCommit:
+           prefix: "" # Optional prefix
+           variant: AbbrevCommitSha # Use abbreviated commit SHA
+
   artifacts:
   - image: asia-southeast1-docker.pkg.dev/multi-gke-ops/gke-repo/media-gen
     buildpacks:
       builder: "gcr.io/buildpacks/builder:v1"
-    
+    context: .
 
 manifests:
   kustomize:

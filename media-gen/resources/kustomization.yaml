@@ -9,7 +9,7 @@ resources:
 images:
 - name: "media-gen"
   newName: asia-southeast1-docker.pkg.dev/multi-gke-ops/gke-repo/media-gen
-  newTag: latest
+  newTag: v1
 
 # patches:
 # - patch: |-
