@@ -8,10 +8,13 @@ from urllib.parse import urlparse, urlunparse
 # import uvicorn
 import gradio as gr
 from utils.acceptance import to_snake_case
-from models.config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SECRET_KEY, DEV_MODE
+from models.config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SECRET_KEY, DEV_MODE, PROJECT_ID
+from pydantic import BaseModel
+from google.cloud import datastore
+import datetime
 
 
-# Fast
+# FastAPI app
 app = FastAPI()
 
 config_data = {'GOOGLE_CLIENT_ID': GOOGLE_CLIENT_ID, 'GOOGLE_CLIENT_SECRET': GOOGLE_CLIENT_SECRET}
@@ -25,6 +28,8 @@ oauth.register(
 
 app.add_middleware(SessionMiddleware, secret_key="is_not_a_secret")
     
+class UserData(BaseModel):
+    user_email: str
 
 # Dependency to get the current user
 def get_user(request: Request):
@@ -32,6 +37,43 @@ def get_user(request: Request):
     if user:
         return user['name']
     return None
+
+# Query user email from Datastore
+@app.get('/user-email/{user_email}')
+def query_user_email(user_email: str):
+    client = datastore.Client(project=PROJECT_ID)
+    query = client.query(kind='MediaGenAllowedEmails')
+    query.add_filter('email', '=', user_email)
+    return list(query.fetch(limit=1))
+
+@app.post('/delete-user-email')
+def delete_user_email(ud: UserData):
+    user_email = ud.user_email
+
+    client = datastore.Client(project=PROJECT_ID)
+    query = client.query(kind='MediaGenAllowedEmails')
+    query.add_filter('email', '=', user_email)
+    entities = list(query.fetch())
+    keys_to_delete = [entity.key for entity in entities]
+    print(f"keys_to_delete: {keys_to_delete}")
+    client.delete_multi(keys_to_delete)
+    return {'message': f'{user_email} was deleted from the Datastore'}
+
+@app.post('/add-user-email')
+async def allowed_email(ud: UserData):
+    user_email = ud.user_email
+
+    # Initialize Datastore client
+    client = datastore.Client(project=PROJECT_ID)
+    # Create a new entity
+    entity = datastore.Entity(key=client.key('MediaGenAllowedEmails'))
+    entity.update({
+        'email': user_email,
+        'created_at': datetime.datetime.now(datetime.UTC)
+    })
+    client.put(entity)  
+    return {'message': f'{user_email} was added to the Datastore'}
+
 
 @app.get('/')
 def public(user: dict = Depends(get_user)):
@@ -60,6 +102,12 @@ async def login(request: Request):
 async def auth(request: Request):
     try:
         access_token = await oauth.google.authorize_access_token(request)
+        # Get user email
+        user_email = dict(access_token)["userinfo"]["email"]
+        print(f"user_email: {user_email}")
+        # Check if user email is in the allowed list
+        if len(query_user_email(user_email)) == 0:
+            return RedirectResponse(url='/')
     except OAuthError:
         return RedirectResponse(url='/')
     request.session['user'] = dict(access_token)["userinfo"]

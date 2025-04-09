@@ -19,6 +19,7 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 DEFAULT_MODEL_ID = os.getenv("DEFAULT_MODEL_ID", "gemini-2.0-flash")
 GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET')
+PROJECT_ID = os.environ.get('PROJECT_ID')
 
 SECRET_KEY = os.environ.get('SECRET_KEY')
 DEV_MODE = os.environ.get('DEV_MODE', "false")

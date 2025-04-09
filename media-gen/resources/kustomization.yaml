@@ -4,7 +4,7 @@ kind: Kustomization
 # namespace: match
 
 resources:
-- media-gen-service.yaml
+- media-gen-service-dev.yaml
 
 images:
 - name: "media-gen"

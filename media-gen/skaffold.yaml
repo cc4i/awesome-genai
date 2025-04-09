@@ -1,6 +1,9 @@
-apiVersion: skaffold/v4beta11
+apiVersion: skaffold/v4beta13
 kind: Config
 build:
+  platforms:
+    - linux/amd64
+    - linux/arm64
   tagPolicy:
     customTemplate:
       # template: "{{env \"RELEASE_TAG\"}}-{{.GIT_COMMIT_SHORT}}"
@@ -13,13 +16,15 @@ build:
 
   artifacts:
   - image: asia-southeast1-docker.pkg.dev/multi-gke-ops/gke-repo/media-gen
-    buildpacks:
-      # builder: "gcr.io/buildpacks/builder:v1"
-      builder: "gcr.io/buildpacks/builder:latest"
-      env:
-        - name: GOOGLE_APPLICATIONS_PACKAGES
-          value: "ffmpeg ffprobe"
     context: .
+    docker:
+      dockerfile: Dockerfile
+
+    #   # builder: "gcr.io/buildpacks/builder:v1"
+    #   builder: "paketobuildpacks/builder-jammy-full"
+    #   env:
+    #     # - "GOOGLE_APPLICATIONS_PACKAGES=ffmpeg,ffprobe"
+    #     - "BP_APT_PACKAGES=ffmpeg"
 
 manifests:
   kustomize:

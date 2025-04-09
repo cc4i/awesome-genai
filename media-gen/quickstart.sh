@@ -27,6 +27,7 @@ export GOOGLE_CLIENT_SECRET=""
 export DEV_MODE="false"
 #
 
+
 # Generate yaml
 cd resources/.
 kustomize build . | envsubst > cr.yaml
