@@ -14,6 +14,10 @@ import mediapy as media
 import requests
 from google.cloud import storage
 from io import BytesIO
+import subprocess
+import tempfile
+import shutil
+import json
 
 from utils.llm import call_llm
 from models.config import VEO_PROJECT_ID, LOCAL_STORAGE
@@ -364,101 +368,113 @@ def rewrite_video_prompt(prompt: str) -> str:
         history=""
     )
 
-
-
-
 def make_video_cyclic(input_video_path, output_video_path):
     """
-    Reads an input video and creates a new video where the last frame
-    is identical to the first frame, making it visually loopable.
+    Creates a seamlessly looping video by appending the first frame to the end.
+    Uses FFmpeg directly for reliable video processing with smooth transition.
 
     Args:
-        input_video_path (str): Path to the input video file.
-        output_video_path (str): Path where the cyclic output video will be saved.
+        input_video_path (str): Path to the input video file
+        output_video_path (str): Path where the cyclic output video will be saved
     """
-    # --- 1. Open Input Video ---
-    cap = cv2.VideoCapture(input_video_path)
-    if not cap.isOpened():
-        print(f"Error: Could not open input video file: {input_video_path}")
-        return
+    try:
+        # Verify input file exists
+        if not os.path.exists(input_video_path):
+            raise FileNotFoundError(f"Input video file not found: {input_video_path}")
 
-    # --- 2. Get Video Properties ---
-    fps = cap.get(cv2.CAP_PROP_FPS)
-    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) # Get total frames
+        # Create output directory if it doesn't exist
+        os.makedirs(os.path.dirname(os.path.abspath(output_video_path)), exist_ok=True)
 
-    if frame_count < 1:
-         print(f"Error: Video file seems empty or invalid: {input_video_path}")
-         cap.release()
-         return
+        # Create a temporary directory for intermediate files
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # 1. Get video information for frame rate
+            probe_cmd = [
+                'ffprobe',
+                '-v', 'quiet',
+                '-print_format', 'json',
+                '-show_streams',
+                '-select_streams', 'v:0',
+                input_video_path
+            ]
+            result = subprocess.run(probe_cmd, capture_output=True, text=True)
+            if result.returncode != 0:
+                raise subprocess.CalledProcessError(
+                    result.returncode, probe_cmd,
+                    output=result.stdout, stderr=result.stderr
+                )
+            
+            video_info = json.loads(result.stdout)
+            fps = eval(video_info['streams'][0]['r_frame_rate'])
 
-    print(f"Input video properties: {width}x{height} @ {fps:.2f} FPS, {frame_count} frames")
+            # 2. Extract the first frame
+            first_frame_path = os.path.join(temp_dir, "first_frame.png")
+            logger.info(f"first_frame_path: {first_frame_path}")
+            extract_cmd = [
+                'ffmpeg', '-y',
+                '-i', os.path.abspath(input_video_path),
+                '-vframes', '1',
+                '-f', 'image2',
+                first_frame_path
+            ]
+            result = subprocess.run(extract_cmd, capture_output=True, text=True)
+            if result.returncode != 0:
+                raise subprocess.CalledProcessError(
+                    result.returncode, extract_cmd, 
+                    output=result.stdout, stderr=result.stderr
+                )
 
-    # --- 3. Read and Store First Frame ---
-    ret, first_frame = cap.read()
-    if not ret:
-        print("Error: Could not read the first frame.")
-        cap.release()
-        return
+            # 3. Create a frame video with proper duration
+            frame_video_path = os.path.join(temp_dir, "frame.mp4")
+            frame_cmd = [
+                'ffmpeg', '-y',
+                '-loop', '1',
+                '-i', first_frame_path,
+                '-t', '0.25',  # Duration of 0.25 seconds for smoother transition
+                '-r', str(fps),  # Match original frame rate
+                '-c:v', 'libx264',
+                '-pix_fmt', 'yuv420p',
+                frame_video_path
+            ]
+            result = subprocess.run(frame_cmd, capture_output=True, text=True)
+            if result.returncode != 0:
+                raise subprocess.CalledProcessError(
+                    result.returncode, frame_cmd,
+                    output=result.stdout, stderr=result.stderr
+                )
 
-    # --- 4. Prepare Output Video Writer ---
-    # Choose a codec (common options: 'mp4v', 'XVID', 'MJPG')
-    # 'mp4v' is widely compatible for .mp4 files
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter(output_video_path, fourcc, fps, (width, height))
+            # 4. Create final video with crossfade transition
+            concat_cmd = [
+                'ffmpeg', '-y',
+                '-i', input_video_path,
+                '-i', frame_video_path,
+                '-filter_complex',
+                f'[0:v][1:v]xfade=transition=fade:duration=0.25:offset={max(0, float(video_info["streams"][0]["duration"]) - 0.25)}[v]',
+                '-map', '[v]',
+                '-c:v', 'libx264',
+                '-preset', 'medium',
+                '-profile:v', 'high',
+                '-pix_fmt', 'yuv420p',
+                '-movflags', '+faststart',
+                '-r', str(fps),  # Maintain original frame rate
+                output_video_path
+            ]
+            result = subprocess.run(concat_cmd, capture_output=True, text=True)
+            if result.returncode != 0:
+                raise subprocess.CalledProcessError(
+                    result.returncode, concat_cmd,
+                    output=result.stdout, stderr=result.stderr
+                )
 
-    if not out.isOpened():
-        print(f"Error: Could not open output video file for writing: {output_video_path}")
-        cap.release()
-        return
+            logger.info(f"Successfully created smooth cyclic video: {output_video_path}")
 
-    print(f"Writing output to: {output_video_path}")
-
-    # --- 5. Write First Frame to Output ---
-    out.write(first_frame)
-    frames_written = 1
-
-    # --- 6. Process Intermediate Frames ---
-    # We've already read the first frame, so we start reading from the second
-    # We need to keep track of the 'previous' frame read to write it,
-    # because we don't know if the *current* frame is the last one until we try reading the *next* one.
-
-    previous_frame = first_frame # Initialize previous_frame for the loop logic
-
-    while True:
-        ret, current_frame = cap.read()
-
-        # If we successfully read a frame (it's not the end)
-        if ret:
-            # Write the frame we read in the *previous* iteration
-            # (This skips writing the actual last frame from the input file)
-             if frames_written > 1 : # Avoid writing the first frame twice initially
-                 out.write(previous_frame)
-                 frames_written += 1
-
-            # Update previous_frame for the next iteration
-             previous_frame = current_frame.copy() # Use copy to avoid issues
-
-             # Simple progress indicator
-             if frames_written % int(fps * 5) == 0: # Print every 5 seconds approx
-                progress = (frames_written / frame_count) * 100
-                print(f"  Processed {frames_written}/{frame_count} frames ({progress:.1f}%)...")
-
-        # If we reached the end of the input video
-        else:
-            # Write the stored *first_frame* as the very last frame
-            # instead of the 'previous_frame' (which was the actual last frame)
-            print(f"  Reached end of input. Writing first frame as last frame...")
-            out.write(first_frame)
-            frames_written += 1
-            break # Exit the loop
-
-    # --- 7. Release Resources ---
-    cap.release()
-    out.release()
-    cv2.destroyAllWindows() # Good practice, though not strictly needed here
-
-    print(f"Finished! Cyclic video saved to {output_video_path}")
-    print(f"Total frames written: {frames_written}")
+    except subprocess.CalledProcessError as e:
+        logger.error(f"FFmpeg error:\nCommand: {' '.join(e.cmd)}\nOutput: {e.output}\nError: {e.stderr}")
+        if os.path.exists(output_video_path):
+            os.remove(output_video_path)
+        raise RuntimeError("Failed to create cyclic video")
+    except Exception as e:
+        logger.error(f"Error creating cyclic video: {str(e)}")
+        if os.path.exists(output_video_path):
+            os.remove(output_video_path)
+        raise
 

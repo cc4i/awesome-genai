@@ -14,7 +14,11 @@ build:
   artifacts:
   - image: asia-southeast1-docker.pkg.dev/multi-gke-ops/gke-repo/media-gen
     buildpacks:
-      builder: "gcr.io/buildpacks/builder:v1"
+      # builder: "gcr.io/buildpacks/builder:v1"
+      builder: "gcr.io/buildpacks/builder:latest"
+      env:
+        - name: GOOGLE_APPLICATIONS_PACKAGES
+          value: "ffmpeg ffprobe"
     context: .
 
 manifests:
