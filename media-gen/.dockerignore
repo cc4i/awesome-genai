@@ -1,5 +1,5 @@
 
-# application_default_credentials.json
+application_default_credentials.json
 
 tmp/
 logs/
@@ -8,7 +8,7 @@ resources/
 .git/
 .gitignore
 
-# .env
+.env
 
 .DS_Store
 

@@ -42,7 +42,6 @@ def generate_images(
     model_id: str,
     prompt: str,
     aspect_ratio: str,
-    color_tone: str,
     lighting: str,
     style: str,
     sample_count: int,
@@ -70,7 +69,7 @@ def generate_images(
             raise ValueError(f"Invalid model_id: {model_id}")
             
         logger.info(f"Generating images with model {model_id}")
-        prompt = f"{prompt}. Color tone: {color_tone}. Lighting: {lighting}. Style: {style}."
+        prompt = f"{prompt}. Lighting: {lighting}. Style: {style}."
         generated_images = gen_images(
             model_id=model_id,
             prompt=prompt,
