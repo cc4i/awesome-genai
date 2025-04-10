@@ -1,8 +1,8 @@
 # General libraries
 uvicorn==0.32.0
 fastapi==0.115.4
-gradio==5.21.0
-gradio_client==1.7.2
+gradio==5.24.0
+gradio_client==1.8.0
 python-dotenv==1.0.1
 starlette==0.41.3
 itsdangerous==2.2.0
@@ -13,7 +13,7 @@ pillow==10.4.0
 
 # GenAIs
 pydantic==2.10.6
-google-genai==1.9.0
+google-genai==1.10.0
 mediapy==1.2.2
 
 # Cloud 
@@ -21,6 +21,5 @@ google-auth==2.38.0
 # authlib
 authlib==1.5.1
 google-cloud-run==0.10.10
-google-cloud-scheduler==2.14.0
 google-cloud-storage==2.19.0
 google-cloud-datastore==2.20.1

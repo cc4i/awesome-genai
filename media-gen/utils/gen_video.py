@@ -186,6 +186,7 @@ def text_to_video(
         prompt, None, output_gcs, seed, aspect_ratio, sample_count, 
         negative_prompt, "allow_adult", enhance, durations
     )
+    logger.info(f"Composed request: {json.dumps(req, indent=4)}")
     resp = send_request_to_google_api(prediction_endpoint, req)
     logger.info(f"Received initial response for operation: {resp}")
     r_resp = fetch_operation(resp["name"])
@@ -230,7 +231,7 @@ def image_to_video(
         prompt, image_gcs, output_gcs, seed, aspect_ratio, sample_count,
         negative_prompt, "allow_adult", enhance, durations
     )
-    logger.debug(f"Composed request: {req}")
+    logger.info(f"Composed request: {json.dumps(req, indent=4)}")
     resp = send_request_to_google_api(prediction_endpoint, req)
     logger.info(f"Received initial response for operation: {resp['name']}")
     r_resp = fetch_operation(resp["name"])
@@ -317,6 +318,7 @@ def download_videos(op: Dict[str, Any], whoami: str, loop_seamless: bool) -> Lis
     if op.get("error") is None:
         if op["response"]:
             if op["response"].get("raiMediaFilteredReasons") is None:
+                logger.info(f"op['response']['videos']: {op['response']['videos']}")
                 for video in op["response"]["videos"]:
                     gcs_uri = video["gcsUri"]
                     file_name = f"{local_path}/{str(uuid.uuid4())}-" + gcs_uri.split("/")[-1]
@@ -343,7 +345,20 @@ def random_video_prompt() -> str:
     """
     return call_llm(
         system_instruction="You're prompt engineer, your task is to create a best prompt for specific model from Google.",
-        prompt="Generate a random prompt to text-to-image for Google Veo2 to generate a creative, brilliant short video. Output as string only, without explanation.",
+        prompt="""
+            Generate a random prompt to text-to-image for Google Veo2 to generate a creative, inspirational video for landscapes, or cars, or nature, or technology, etc., which should boasts a cinematic quality with meticulously crafted shots and vibrant colors,  breathtaking, a true feast for the eyes.
+            *INSTRUCTION*:
+            The following elements should be included in your prompt:
+                1. Subject: The object, person, animal, or scenery that you want in your video.
+                2. Context: The background or context in which the subject is placed.
+                3. Action: What the subject is doing (for example, walking, running, or turning their head).
+                4. Style: This can be general or very specific. Consider using specific film style keywords, such as horror film, film noir, or animated styles like cartoon style render.
+                5. Camera motion: Optional: What the camera is doing, such as aerial view, eye-level, top-down shot, or low-angle shot.
+                6. Composition: Optional: How the shot is framed, such as wide shot, close-up, or extreme close-up.
+                7. Ambiance: Optional: How the color and light contribute to the scene, such as blue tones, night, or warm tones.            
+            *OUTPUT*:
+            Output as string only, without explanation.
+        """,
         history=""
     )
 

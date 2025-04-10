@@ -42,6 +42,9 @@ def generate_images(
     model_id: str,
     prompt: str,
     aspect_ratio: str,
+    color_tone: str,
+    lighting: str,
+    style: str,
     sample_count: int,
     is_enhance: bool
 ) -> List[Image.Image]:
@@ -67,6 +70,7 @@ def generate_images(
             raise ValueError(f"Invalid model_id: {model_id}")
             
         logger.info(f"Generating images with model {model_id}")
+        prompt = f"{prompt}. Color tone: {color_tone}. Lighting: {lighting}. Style: {style}."
         generated_images = gen_images(
             model_id=model_id,
             prompt=prompt,
@@ -164,13 +168,13 @@ def generate_videos(
         if type == "Text-to-Video":
             op, rr = text_to_video(
                 prompt=prompt,
-                seed=seed,
+                seed=int(seed),
                 aspect_ratio=aspect_ratio,
-                sample_count=sample_count,
+                sample_count=int(sample_count),
                 output_gcs=output_gcs,
                 negative_prompt=negative_prompt,
                 enhance=enhance,
-                durations=durations
+                durations=int(durations)
             )
             return download_videos(op, whoami, loop_seamless), rr
         else:
@@ -178,13 +182,13 @@ def generate_videos(
             op, rr = image_to_video(
                 prompt=prompt,
                 image_gcs=file_in_gcs,
-                seed=seed,
+                seed=int(   seed),
                 aspect_ratio=aspect_ratio,
-                sample_count=sample_count,
+                sample_count=int(sample_count),
                 output_gcs=output_gcs,
                 negative_prompt=negative_prompt,
                 enhance=enhance,
-                durations=durations
+                durations=int(durations)
             )
             return download_videos(op, whoami, loop_seamless), rr
     except Exception as e:

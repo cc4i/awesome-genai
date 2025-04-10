@@ -44,7 +44,7 @@ def validate_config() -> None:
 
 # UI Constants
 ASPECT_RATIOS = ["1:1", "9:16", "16:9", "4:3", "3:4"]
-SAMPLE_COUNTS = ["1", "2", "3", "4", "5"]
+SAMPLE_COUNTS = ["1", "2", "3", "4"]
 DEFAULT_SAMPLE_COUNT = "2"
 DEFAULT_ASPECT_RATIO = "16:9"
 
@@ -85,5 +85,5 @@ VIDEO_EXAMPLES: List[str] = [
 IMAGE_EXAMPLES: List[str] = [
     "A woman, 35mm portrait, blue and grey duotones.",
     "An expansive mountain range, landscape wide angle 10mm.",
-    "A technical pencil drawing of an angular sporty electric sedan with skyscrapers in the background.",
+    "An angular sporty electric sedan with skyscrapers in the background.",
 ] 

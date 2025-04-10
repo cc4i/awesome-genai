@@ -81,7 +81,7 @@ with gr.Blocks(theme=gr.themes.Glass(), title="Creative GeN/Studio") as demo:
         di_aspect_ratio,
         di_color_tone,
         di_lighting,
-        di_composition,
+        di_style,
         di_sample_count,
         di_enhancement,
         btn_rewrite_prompt_image,
@@ -135,6 +135,9 @@ with gr.Blocks(theme=gr.themes.Glass(), title="Creative GeN/Studio") as demo:
             imagen_model_id,
             tb_prompt_image,
             di_aspect_ratio,
+            di_color_tone,
+            di_lighting,
+            di_style,
             di_sample_count,
             di_enhancement
         ],

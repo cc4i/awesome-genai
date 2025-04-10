@@ -196,17 +196,17 @@ def create_image_tab() -> Tuple[gr.Tab, List[Any]]:
             )
             di_color_tone = gr.Dropdown(
                 label="Color & Tone",
-                choices=[""],
+                choices=["vibrant", "pastel", "sepia", "black & white"],
                 interactive=True
             )
             di_lighting = gr.Dropdown(
                 label="Lighting",
-                choices=[""],
+                choices=["natural", "dramatic", "warm", "cold"],
                 interactive=True
             )
-            di_composition = gr.Dropdown(
-                label="Composition",
-                choices=[""],
+            di_style = gr.Dropdown(
+                label="Style",
+                choices=["painting", "pastel painting", "photograph", "Studio Ghibli", "anime", "technical pencil drawing","charcoal drawing", "color pencil drawing", "art deco (poster)"],
                 interactive=True
             )
             di_sample_count = gr.Dropdown(
@@ -254,7 +254,7 @@ def create_image_tab() -> Tuple[gr.Tab, List[Any]]:
         di_aspect_ratio,
         di_color_tone,
         di_lighting,
-        di_composition,
+        di_style,
         di_sample_count,
         di_enhancement,
         btn_rewrite_prompt_image,
