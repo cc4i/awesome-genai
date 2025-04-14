@@ -44,9 +44,11 @@ def add_message(
         Updated history and cleared input box
     """
     for x in message["files"]:
+        print(x)
         history.append(((x,), None))
     if message["text"] is not None:
         history.append((message["text"], None))
+    print(history)
     return history, gr.MultimodalTextbox(value=None, interactive=False)
 
 def bot_message(

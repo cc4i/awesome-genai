@@ -29,7 +29,22 @@ export DEV_MODE="false"
 
 
 # Generate yaml
-cd resources/.
+mkdir release
+cd release
+cp ../resources/media-gen-service.yaml .
+cat << EOF > kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- media-gen-service.yaml
+
+images:
+- name: "media-gen"
+  newName: asia-southeast1-docker.pkg.dev/multi-gke-ops/gke-repo/media-gen
+  newTag: v1
+EOF
+
 kustomize build . | envsubst > cr.yaml
 
 # Deploy cr

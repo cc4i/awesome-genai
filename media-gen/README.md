@@ -45,37 +45,53 @@ git clone https://github.com/cc4i/awesome-genai.git
 cd awesome-genai/media-gen
 ```
 
-2. Set up Google Cloud credentials:
-   - Place your `application_default_credentials.json` in the project root
-   - Ensure you have the necessary permissions for Google Cloud Storage
+2. Grant permissions to service account
+```bash
+# Get project number
+PROJECT_ID=<YOUR_PROJECT_ID>
+PROJECT_NUMBER=$(gcloud projects list --filter="name:${PROJECT_ID}" --format="value(PROJECT_NUMBER)")
 
-3. Set up [OAuth 2.0](https://support.google.com/googleapi/answer/6158849?hl=en) in [Google Cloud Console](https://console.developers.google.com/).
+# Grant permission
+gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+  --member=serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com \
+  --role=roles/iam.serviceAccountUser
+
+gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+  --member=serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com \
+  --role=roles/storage.objectAdmin
+  
+gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+  --member=serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com \
+  --role=roles/aiplatform.user
+```
+
+3. Create a API key in [Google AI Studio](https://aistudio.google.com/app/apikey)
+
+4. Set up [OAuth 2.0](https://support.google.com/googleapi/answer/6158849?hl=en) in [Google Cloud Console](https://console.developers.google.com/).
     - Oauth consent screen
     - Create a client with following settings :
-      - Authorised JavaScript origins: http://<Domain of Cloud Run>:8000
-      - Authorised redirect URIs: http://<Domain of Cloud Run>:8000/auth & http://<Domain of Cloud Run>:8000/login
+      - Authorised JavaScript origins: https://<DOMAIN-OF-CLOUD-RUN>
+      - Authorised redirect URIs: 
+        - https://<DOMAIN-OF-CLOUD-RUN>/auth 
+        - https://<DOMAIN-OF-CLOUD-RUN>/login
     - Notes Client ID and Client Secret
 
-4. Set up environment variables:
-   - Copy `.env.example` to `.env`
-   - Fill in your API keys and configuration.
+5. Configure environment variables in `quickstart.sh`
 
-
-
-
-
-4. Install dependencies:
+6. Deploy the application.
 ```bash
-skaffold run
+./quickstart.sh
 ```
 
 
 ## Usage
 
-1. Start the application:
 ```bash
-python main.py
+# Get the URL of Cloud Run
+gcloud run services describe media-gen --region=us-central1 --format="value(status.url)"
+
+# Access the web interface in Mac
+open `gcloud run services describe media-gen --region=us-central1 --format="value(status.url)"`
 ```
 
-2. Access the web interface at `http://localhost:8000/`
 

@@ -287,7 +287,7 @@ def create_chat_tab() -> Tuple[gr.Tab, List[Any]]:
                 label="Response Type"
             )
         with gr.Row():
-            mt_input = gr.MultimodalTextbox(label="Ask ME")
+            mt_input = gr.MultimodalTextbox(label="Ask ME", file_count="multiple")
         with gr.Row():
             btn_clear_cov = gr.ClearButton(
                 icon="images/free-reboot-icon.png",

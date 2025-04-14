@@ -100,3 +100,6 @@ rrd/populate-db
 #Credential
 application_default_credentials.json
 test.py
+rel.sh
+cr.yaml
+release/
