@@ -28,6 +28,16 @@ def html_src(harm_level: str) -> str:
         </div>
         </div>
         """
+# TODO: Use gallery component to put multiple files in a single message
+def add_history_message(
+        history:list[gr.ChatMessage], message: Dict[str, Any]
+) -> Tuple[list[gr.ChatMessage], gr.MultimodalTextbox]:
+    if message.get("files") is not None:
+        history.append(gr.ChatMessage(role="user", content=gr.Gallery(message.get("files"))))
+    if message.get("text") is not None:
+        history.append(gr.ChatMessage(role="user", content=message.get("text")))
+    return history, gr.MultimodalTextbox(value=None, interactive=False)
+
 
 def add_message(
     history: List[Tuple[Union[str, Tuple[str, ...]], Optional[Any]]],

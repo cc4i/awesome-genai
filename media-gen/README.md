@@ -76,9 +76,15 @@ gcloud projects add-iam-policy-binding ${PROJECT_ID} \
         - https://<DOMAIN-OF-CLOUD-RUN>/login
     - Notes Client ID and Client Secret
 
-5. Configure environment variables in `quickstart.sh`
+5. Create datastore to store user sessions
+```bash
+gcloud firestore databases create \
+    --location=nam5 \
+    --type=datastore-mode
+```
+6. Configure environment variables in `quickstart.sh`
 
-6. Deploy the application.
+7. Deploy the application.
 ```bash
 ./quickstart.sh
 ```
