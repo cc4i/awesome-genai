@@ -1,23 +1,24 @@
 # General libraries
-uvicorn==0.32.0
-fastapi==0.115.4
-gradio==5.21.0
-gradio_client==1.7.2
-python-dotenv==1.0.1
-starlette==0.41.3
+uvicorn==0.34.2
+fastapi==0.115.12
+gradio==5.29.0
+gradio_client==1.10.0
+python-dotenv==1.1.0
+starlette==0.46.2
 itsdangerous==2.2.0
-urllib3==2.2.3
-moviepy==2.1.2
+urllib3==2.4.0
+
 
 # GenAIs
-pydantic==2.10.6
-google-genai==1.9.0
-mediapy==1.2.2
+pydantic==2.11.4
+google-genai==1.13.0
+moviepy==2.1.2
 
 # Cloud 
-google-auth==2.38.0
+google-auth==2.39.0
 # authlib
-authlib==1.5.1
-google-cloud-run==0.10.10
-google-cloud-scheduler==2.14.0
-google-cloud-storage==2.19.0
+authlib==1.5.2
+google-cloud-run==0.10.17
+google-cloud-storage==3.1.0
+google-cloud-datastore==2.21.0
+

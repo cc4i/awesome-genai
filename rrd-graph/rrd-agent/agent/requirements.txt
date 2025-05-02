@@ -1,20 +1,20 @@
 # General libraries
 pg8000==1.31.2
-SQLAlchemy==2.0.31
-pytz==2024.1
+SQLAlchemy==2.0.40
+pytz==2025.2
 
 # GenAIs
-langgraph==0.2.74
-langchain-community==0.3.10
-langchain-google-genai==2.0.10
-langchain-google-vertexai==2.0.13
-pydantic==2.10.6
-anthropic==0.47.0
-langchain-anthropic==0.3.0
-langchain-xai==0.2.1
+langchain==0.3.24
+# langchain-community==0.3.10
+langchain-google-genai==2.1.4
+langchain-google-vertexai==2.0.21
+pydantic==2.11.4
+anthropic==0.50.0
+langchain-anthropic==0.3.12
+# langchain-xai==0.2.1
 
 # Cloud 
-google-cloud-aiplatform==1.81.0
-google-auth==2.38.0
-google-cloud-alloydb-connector==1.4.0
+google-cloud-aiplatform==1.91.0
+google-auth==2.39.0
+google-cloud-alloydb-connector==1.8.0
 

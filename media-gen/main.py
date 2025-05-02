@@ -52,8 +52,8 @@ with gr.Blocks(theme=gr.themes.Glass(), title="Creative GeN/Studio") as demo:
             
     # Create tabs
     video_tab, video_components = create_video_tab()
-    image_tab, image_components = create_image_tab()
-    chat_tab, chat_components = create_chat_tab()
+    # image_tab, image_components = create_image_tab()
+    # chat_tab, chat_components = create_chat_tab()
     checking_tab, checking_components = create_checking_tab()
     
     # Extract components
@@ -75,21 +75,21 @@ with gr.Blocks(theme=gr.themes.Glass(), title="Creative GeN/Studio") as demo:
         rr_json
     ) = video_components
     
-    (
-        imagen_model_id,
-        tb_prompt_image,
-        di_aspect_ratio,
-        di_lighting,
-        di_style,
-        di_sample_count,
-        di_enhancement,
-        btn_rewrite_prompt_image,
-        btn_random_image_prompt,
-        btn_generate_image,
-        image_gallery
-    ) = image_components
+    # (
+    #     imagen_model_id,
+    #     tb_prompt_image,
+    #     di_aspect_ratio,
+    #     di_lighting,
+    #     di_style,
+    #     di_sample_count,
+    #     di_enhancement,
+    #     btn_rewrite_prompt_image,
+    #     btn_random_image_prompt,
+    #     btn_generate_image,
+    #     image_gallery
+    # ) = image_components
     
-    (cb_output, response_type, mt_input, btn_clear_cov) = chat_components
+    # (cb_output, response_type, mt_input, btn_clear_cov) = chat_components
     (input_checking_image, what_models_see_image) = checking_components
     
     # Set up event handlers
@@ -128,56 +128,56 @@ with gr.Blocks(theme=gr.themes.Glass(), title="Creative GeN/Studio") as demo:
         outputs=[tb_prompt_video]
     )
     
-    btn_generate_image.click(
-        generate_images,
-        inputs=[
-            imagen_model_id,
-            tb_prompt_image,
-            di_aspect_ratio,
-            di_lighting,
-            di_style,
-            di_sample_count,
-            di_enhancement
-        ],
-        outputs=[image_gallery]
-    )
+    # btn_generate_image.click(
+    #     generate_images,
+    #     inputs=[
+    #         imagen_model_id,
+    #         tb_prompt_image,
+    #         di_aspect_ratio,
+    #         di_lighting,
+    #         di_style,
+    #         di_sample_count,
+    #         di_enhancement
+    #     ],
+    #     outputs=[image_gallery]
+    # )
     
-    btn_random_image_prompt.click(
-        random_image_prompt,
-        outputs=[tb_prompt_image]
-    )
+    # btn_random_image_prompt.click(
+    #     random_image_prompt,
+    #     outputs=[tb_prompt_image]
+    # )
     
-    btn_rewrite_prompt_image.click(
-        rewrite_image_prompt,
-        inputs=[tb_prompt_image],
-        outputs=[tb_prompt_image]
-    )
+    # btn_rewrite_prompt_image.click(
+    #     rewrite_image_prompt,
+    #     inputs=[tb_prompt_image],
+    #     outputs=[tb_prompt_image]
+    # )
     
-    # Chat functionality
-    chat_msg = mt_input.submit(
-        add_message,
-        inputs=[cb_output, mt_input],
-        outputs=[cb_output, mt_input]
-    )
+    # # Chat functionality
+    # chat_msg = mt_input.submit(
+    #     add_message,
+    #     inputs=[cb_output, mt_input],
+    #     outputs=[cb_output, mt_input]
+    # )
     
-    bot_msg = chat_msg.then(
-        bot_message,
-        inputs=[cb_output, response_type, tb_whoami],
-        outputs=[cb_output],
-        api_name="bot_response"
-    )
+    # bot_msg = chat_msg.then(
+    #     bot_message,
+    #     inputs=[cb_output, response_type, tb_whoami],
+    #     outputs=[cb_output],
+    #     api_name="bot_response"
+    # )
     
-    bot_msg.then(
-        lambda: gr.MultimodalTextbox(interactive=True),
-        None,
-        [mt_input]
-    )
+    # bot_msg.then(
+    #     lambda: gr.MultimodalTextbox(interactive=True),
+    #     None,
+    #     [mt_input]
+    # )
     
-    btn_clear_cov.click(
-        delete_temp_files,
-        inputs=[tb_whoami],
-        outputs=None
-    )
+    # btn_clear_cov.click(
+    #     delete_temp_files,
+    #     inputs=[tb_whoami],
+    #     outputs=None
+    # )
     
     # Initialize UI
     demo.load(greet, None, outputs=[cgs_markdone, tb_whoami])
