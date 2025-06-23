@@ -33,7 +33,7 @@ from app.agent import root_agent
 from app.utils.gcs import create_bucket_if_not_exists
 from app.utils.tracing import CloudTraceLoggingSpanExporter
 from app.utils.typing import Feedback
-
+import asyncio
 
 class AgentEngineApp(AdkApp):
     def set_up(self) -> None:
