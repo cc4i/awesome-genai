@@ -8,7 +8,7 @@ from langchain_google_vertexai.model_garden import ChatAnthropicVertex
 from langchain_google_vertexai.model_garden_maas.llama import VertexModelGardenLlama
 from langchain_google_genai import ChatGoogleGenerativeAI
 from google.auth import default, transport
-from langchain_xai import ChatXAI
+# from langchain_xai import ChatXAI
 
 os.environ["LANGSMITH_API_KEY"]="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"
 
@@ -36,24 +36,27 @@ def init_model(project_id:str, location:str, model_id:str):
             }
 
         )
-    elif model_id.startswith("gemini"):
-        # VertexAI Gemini
-        vertexai.init(project=project_id, location=location)
-        llm = ChatVertexAI(
-            credentials=credentials, model_name=model_id, temperature=0.5,
-            safety_settings = {
-                        HarmCategory.HARM_CATEGORY_UNSPECIFIED: HarmBlockThreshold.BLOCK_NONE,
-                        HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
-                        HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
-                        HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
-                        HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
-                    }
-            )
-    elif model_id.startswith("grok"):
-        llm = ChatXAI(
-            xai_api_key="xai-H3RvDDMVKM6ttFrTAt0RlytkaheWZ9UbIRPgGoJUuojvX3p0bjepzuuWgl1Gl3Jgd6GX28yRbSy1upB2",
-            model=model_id,
-        )
+    # elif model_id.startswith("gemini"):
+    #     # Google Generative AI for Gemini
+    #     llm = ChatGoogleGenerativeAI(
+    #         project=project_id,
+    #         location=location,
+    #         credentials=credentials,
+    #         model=model_id,
+    #         temperature=0.5,
+    #         safety_settings = {
+    #                     HarmCategory.HARM_CATEGORY_UNSPECIFIED: HarmBlockThreshold.BLOCK_NONE,
+    #                     HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
+    #                     HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
+    #                     HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
+    #                     HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+    #                 }
+    #         )
+    # elif model_id.startswith("grok"):
+    #     llm = ChatXAI(
+    #         xai_api_key="xai-H3RvDDMVKM6ttFrTAt0RlytkaheWZ9UbIRPgGoJUuojvX3p0bjepzuuWgl1Gl3Jgd6GX28yRbSy1upB2",
+    #         model=model_id,
+    #     )
     else:
         # GoogleGenerativeAI
         if os.getenv("GOOGLE_GENERATIVEAI_API_KEY") is not None:

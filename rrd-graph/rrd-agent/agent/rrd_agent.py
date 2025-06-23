@@ -63,9 +63,9 @@ class State(TypedDict):
 
 # Initial LLM
 # llm = init_model(project_id="multi-gke-ops", location="us-east5", model_id="claude-3-5-sonnet-v2@20241022")
-llm = init_model(project_id="multi-gke-ops", location="us-east5", model_id="claude-3-7-sonnet@20250219")
+# llm = init_model(project_id="multi-gke-ops", location="us-east5", model_id="claude-3-7-sonnet@20250219")
 # ?400 Function calling is not enabled for models/gemini-2.0-flash-thinking-exp-01-21
-llm = init_model(project_id="multi-gke-ops", location="us-central1", model_id="gemini-2.0-flash-001")
+llm = init_model(project_id="multi-gke-ops", location="us-central1", model_id="gemini-2.5-pro")
 # llm = init_model(project_id="multi-gke-ops", location="us-central1", model_id="gemini-2.0-flash")
 # llm = init_model(project_id="multi-gke-ops", location="us-central1", model_id="gemini-exp-1220")
 # llm = init_model(project_id="multi-gke-ops", location="us-central1", model_id="grok-2-latest")
@@ -93,7 +93,7 @@ rrd_backend_prompt = ChatPromptTemplate.from_messages(
             "\n\nIf the user needs help, and none of your tools are appropriate for it, then"
             ' "CompleteOrEscalate" the dialog to the host assistant. Do not waste the user\'s time. Do not make up invalid tools or functions.',
         ),
-        ("placeholder", "{messages}"),
+        ("human", "{messages}"),
     ]
 )
 rrd_backend_tools=[
@@ -109,6 +109,7 @@ rrd_backend_tools=[
     generate_sql_run,
 ]
 rrd_backend_runnable = rrd_backend_prompt | llm.bind_tools(rrd_backend_tools + [CompleteOrEscalate])
+print(f"rrd_backend_runnable > {rrd_backend_runnable}")
 
 # rrd sentiment
 rrd_sentiment_prompt = ChatPromptTemplate.from_messages(
@@ -122,7 +123,7 @@ rrd_sentiment_prompt = ChatPromptTemplate.from_messages(
             ' "CompleteOrEscalate" the dialog to the host assistant. Do not waste the user\'s time. Do not make up invalid tools or functions.',
             
         ),
-        ("placeholder", "{messages}"),
+        ("human", "{messages}"),
     ]
 )
 rrd_sentiment_tools=[
@@ -143,7 +144,7 @@ rrd_playbook_prompt = ChatPromptTemplate.from_messages(
             ' "CompleteOrEscalate" the dialog to the host assistant. Do not waste the user\'s time. Do not make up invalid tools or functions.',
             
         ),
-        ("placeholder", "{messages}"),
+        ("human", "{messages}"),
     ]
 )
 rrd_playbook_tools=[latest_playbook]
@@ -197,7 +198,7 @@ rrd_assistant_prompt = ChatPromptTemplate.from_messages(
             " If a search comes up empty, expand your search before giving up."
             "\nCurrent time: {time}.",
         ),
-        ("placeholder", "{messages}"),
+        ("human", "{messages}"),
     ]
 ).partial(time=datetime.now())
 rrd_assistant_tools=[
@@ -269,7 +270,11 @@ class Assistant:
 
     def __call__(self, state: State, config: RunnableConfig):
         while True:
-            
+            print(f"State before runnable.invoke: {state}") # Log the full state
+            if 'messages' in state:
+                for i, msg in enumerate(state['messages']):
+                    print(f"Message {i} type: {type(msg)}, content: '{msg.content if hasattr(msg, 'content') else 'N/A'}'")
+
             result = self.runnable.invoke(state)
             # If the LLM happens to return an empty response, we will re-prompt it
             # for an actual response.
@@ -403,7 +408,7 @@ builder.add_edge(START, "rrd_assistant")
 # The checkpointer lets the graph persist its state
 # this is a complete memory for the entire graph.
 memory = MemorySaver()
-graph = builder.compile(checkpointer=memory)
+graph = builder.compile()
 
 
 
