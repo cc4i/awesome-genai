@@ -29,14 +29,18 @@ from utils.logger import logger
 
 
 # API endpoints
-video_model = f"https://us-central1-aiplatform.googleapis.com/v1beta1/projects/{VEO_PROJECT_ID}/locations/us-central1/publishers/google/models/veo-2.0-generate-001"
-prediction_endpoint = f"{video_model}:predictLongRunning"
-fetch_endpoint = f"{video_model}:fetchPredictOperation"
+video_model = f"https://us-central1-aiplatform.googleapis.com/v1beta1/projects/{VEO_PROJECT_ID}/locations/us-central1/publishers/google/models"
 
 # Constants
 VIDEO_GENERATION_TIMEOUT = 300  # 5 minutes
 POLLING_INTERVAL = 10
 MAX_RETRIES = 30
+
+def prediction_endpoint(model_id: str) -> str:
+    return f"{video_model}/{model_id}:predictLongRunning"
+
+def fetch_endpoint(model_id: str) -> str:
+    return f"{video_model}/{model_id}:fetchPredictOperation"
 
 def send_request_to_google_api(api_endpoint: str, data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """
@@ -81,8 +85,9 @@ def compose_videogen_request(
     sample_count: int,
     negative_prompt: str,
     person_generation: str = "allow_adult",
-    enhance_prompt: str = "yes",
-    duration_seconds: int = 8
+    enhance_prompt: str = "true",
+    duration_seconds: int = 8,
+    generate_audio: str = "true"
 ) -> Dict[str, Any]:
     """
     Composes a request for video generation.
@@ -98,6 +103,7 @@ def compose_videogen_request(
         person_generation: Person generation policy
         enhance_prompt: Whether to enhance the prompt
         duration_seconds: Video duration in seconds
+        generate_audio: Whether to generate audio ("true" or "false")
 
     Returns:
         Dictionary containing the composed request
@@ -117,11 +123,12 @@ def compose_videogen_request(
             "negativePrompt": negative_prompt,
             "personGeneration": person_generation,
             "enhancePrompt": enhance_prompt,
-            "durationSeconds": duration_seconds
+            "durationSeconds": duration_seconds,
+            "generateAudio": generate_audio
         },
     }
 
-def fetch_operation(lro_name: str, itr: int = MAX_RETRIES) -> Dict[str, Any]:
+def fetch_operation(model_id: str, lro_name: str, itr: int = MAX_RETRIES) -> Dict[str, Any]:
     """
     Fetches the status of a long-running operation.
 
@@ -138,7 +145,7 @@ def fetch_operation(lro_name: str, itr: int = MAX_RETRIES) -> Dict[str, Any]:
     request = {"operationName": lro_name}
     for i in range(itr):
         try:
-            resp = send_request_to_google_api(fetch_endpoint, request)
+            resp = send_request_to_google_api(fetch_endpoint(model_id), request)
             if "done" in resp and resp["done"]:
                 logger.info(f"Operation {lro_name} completed successfully")
                 return resp
@@ -150,6 +157,7 @@ def fetch_operation(lro_name: str, itr: int = MAX_RETRIES) -> Dict[str, Any]:
     raise APIError(f"Operation {lro_name} timed out after {itr * POLLING_INTERVAL} seconds")
 
 def text_to_video(
+    model_id: str,
     prompt: str,
     seed: int,
     aspect_ratio: str,
@@ -157,12 +165,14 @@ def text_to_video(
     output_gcs: str,
     negative_prompt: str,
     enhance: str,
-    durations: int
+    durations: int,
+    generate_audio: str
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
     Generate a video from text using Google's Veo 2.0 model.
 
     Args:
+        model_id: The ID of the model to use
         prompt: The text prompt describing the video to generate
         seed: Random seed for generation (0-4294967295)
         aspect_ratio: Video aspect ratio (1:1, 9:16, 16:9, 4:3, 3:4)
@@ -171,6 +181,7 @@ def text_to_video(
         negative_prompt: Text describing what to avoid in generation
         enhance: Whether to enhance the prompt ("yes" or "no")
         durations: Video duration in seconds (5-8)
+        generate_audio: Whether to generate audio ("true" or "false")
 
     Returns:
         Tuple containing:
@@ -184,15 +195,16 @@ def text_to_video(
     logger.info(f"Starting text-to-video generation with prompt: {prompt}")
     req = compose_videogen_request(
         prompt, None, output_gcs, seed, aspect_ratio, sample_count, 
-        negative_prompt, "allow_adult", enhance, durations
+        negative_prompt, "allow_adult", enhance, durations, generate_audio
     )
     logger.info(f"Composed request: {json.dumps(req, indent=4)}")
-    resp = send_request_to_google_api(prediction_endpoint, req)
+    resp = send_request_to_google_api(prediction_endpoint(model_id), req)
     logger.info(f"Received initial response for operation: {resp}")
-    r_resp = fetch_operation(resp["name"])
+    r_resp = fetch_operation(model_id, resp["name"])
     return r_resp, {"req": req, "resp": r_resp}
 
 def image_to_video(
+    model_id: str,
     prompt: str,
     image_gcs: str,
     seed: int,
@@ -201,12 +213,14 @@ def image_to_video(
     output_gcs: str,
     negative_prompt: str,
     enhance: str,
-    durations: int
+    durations: int,
+    generate_audio: str
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
     Generate a video from an image using Google's Veo 2.0 model.
 
     Args:
+        model_id: The ID of the model to use
         prompt: The text prompt describing the video to generate
         image_gcs: GCS URI of the input image
         seed: Random seed for generation (0-4294967295)
@@ -216,6 +230,7 @@ def image_to_video(
         negative_prompt: Text describing what to avoid in generation
         enhance: Whether to enhance the prompt ("yes" or "no")
         durations: Video duration in seconds (5-8)
+        generate_audio: Whether to generate audio ("true" or "false")
 
     Returns:
         Tuple containing:
@@ -229,10 +244,10 @@ def image_to_video(
     logger.info(f"Starting image-to-video generation with prompt: {prompt}")
     req = compose_videogen_request(
         prompt, image_gcs, output_gcs, seed, aspect_ratio, sample_count,
-        negative_prompt, "allow_adult", enhance, durations
+        negative_prompt, "allow_adult", enhance, durations, generate_audio
     )
     logger.info(f"Composed request: {json.dumps(req, indent=4)}")
-    resp = send_request_to_google_api(prediction_endpoint, req)
+    resp = send_request_to_google_api(prediction_endpoint(model_id), req)
     logger.info(f"Received initial response for operation: {resp['name']}")
     r_resp = fetch_operation(resp["name"])
     return r_resp, {"req": req, "resp": r_resp}

@@ -127,6 +127,7 @@ def upload_image(input_image_path: str, whoami: str) -> str:
         raise FileUploadError(f"Failed to upload image: {str(e)}")
 
 def generate_videos(
+    veo_model_id: str,
     whoami: str,
     file_in_gcs: str,
     prompt: str,
@@ -135,14 +136,16 @@ def generate_videos(
     aspect_ratio: str,
     seed: str,
     sample_count: int,
-    enhance: bool,
+    enhance: str,
     durations: int,
+    generate_audio: str,
     loop_seamless: bool
 ) -> Tuple[List[str], Dict[str, Any]]:
     """
     Generate videos using either text or image input.
     
     Args:
+        veo_model_id: The ID of the model to use
         whoami: User identifier
         file_in_gcs: GCS path of input image (for image-to-video)
         prompt: Text prompt for generation
@@ -153,6 +156,8 @@ def generate_videos(
         sample_count: Number of videos to generate
         enhance: Whether to apply enhancement
         durations: Duration of each video in seconds
+        generate_audio: Whether to generate audio
+        loop_seamless: Whether to loop seamlessly
         
     Returns:
         Tuple of (list of video paths, response metadata)
@@ -166,6 +171,7 @@ def generate_videos(
         
         if type == "Text-to-Video":
             op, rr = text_to_video(
+                model_id=veo_model_id,
                 prompt=prompt,
                 seed=int(seed),
                 aspect_ratio=aspect_ratio,
@@ -173,12 +179,14 @@ def generate_videos(
                 output_gcs=output_gcs,
                 negative_prompt=negative_prompt,
                 enhance=enhance,
-                durations=int(durations)
+                durations=int(durations),
+                generate_audio=generate_audio
             )
             return download_videos(op, whoami, loop_seamless), rr
         else:
             print(f"first image in the gcs: {file_in_gcs}")
             op, rr = image_to_video(
+                model_id=veo_model_id,
                 prompt=prompt,
                 image_gcs=file_in_gcs,
                 seed=int(   seed),
@@ -187,7 +195,8 @@ def generate_videos(
                 output_gcs=output_gcs,
                 negative_prompt=negative_prompt,
                 enhance=enhance,
-                durations=int(durations)
+                durations=int(durations),
+                generate_audio=generate_audio
             )
             return download_videos(op, whoami, loop_seamless), rr
     except Exception as e:

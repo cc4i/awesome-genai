@@ -30,12 +30,12 @@ def create_video_tab() -> Tuple[gr.Tab, List[Any]]:
     """
     with gr.Tab("Veo") as video_tab:
         with gr.Row():
-            gr.Radio(
+            veo_model_id = gr.Radio(
                 label="Model",
-                value="veo-2.0-generate-001",
                 choices=VIDEO_MODELS,
                 interactive=True
             )
+            
         with gr.Row():
             with gr.Column(scale=2):
                 tb_prompt_video = gr.Textbox(
@@ -91,10 +91,17 @@ def create_video_tab() -> Tuple[gr.Tab, List[Any]]:
                 choices=SAMPLE_COUNTS,
                 interactive=True
             )
+            dd_generate_audio = gr.Dropdown(
+                label="Audio",
+                value="true",
+                choices=["true", "false"],
+                interactive=True
+            )
+        with gr.Row():
             dd_enhancement = gr.Dropdown(
                 label="Enhancement",
-                value="yes",
-                choices=["yes", "no"],
+                value="true",
+                choices=["true", "false"],
                 interactive=True
             )
             dd_duration = gr.Slider(
@@ -139,6 +146,7 @@ def create_video_tab() -> Tuple[gr.Tab, List[Any]]:
             rr_json = gr.JSON()
             
     components = [
+        veo_model_id,
         input_first_image,
         tb_prompt_video,
         tb_negative_prompt,
@@ -148,6 +156,7 @@ def create_video_tab() -> Tuple[gr.Tab, List[Any]]:
         dd_sample_count,
         dd_enhancement,
         dd_duration,
+        dd_generate_audio,
         cb_loop_seamless,
         btn_rewrite_prompt_video,
         btn_random_video_prompt,
@@ -169,7 +178,6 @@ def create_image_tab() -> Tuple[gr.Tab, List[Any]]:
         with gr.Row():
             imagen_model_id = gr.Radio(
                 label="Model",
-                value="imagen-3.0-generate-002",
                 choices=IMAGE_MODELS,
                 interactive=True
             )
