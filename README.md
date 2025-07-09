@@ -11,7 +11,7 @@
 
 ## Demo
 - [Media Gen](./media-gen)
-- [Realtime Reputation Defender](./reputation-defender)
-- [Trend Spotting](./trend-spotting)
+- [Realtime Reputation Defender](./rrd-graph/)
+- [Trend Spotting](./trendspotting/)
 - [Play Farkle with Gemini](./farkle)
 - [Story Gen](./story-gen)

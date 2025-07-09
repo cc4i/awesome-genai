@@ -19,7 +19,7 @@ from zoneinfo import ZoneInfo
 import google.auth
 from google.adk.agents import Agent
 from app.web_searcher_agent import web_searcher_agent
-
+from app.extract_agent import file_reader_agent
 
 
 root_agent = Agent(
@@ -30,5 +30,5 @@ root_agent = Agent(
         - Do not make up invalid agents or tools.
         - Expand your work bounds if the first try returns no results.
     """,
-    sub_agents=[web_searcher_agent],
+    sub_agents=[file_reader_agent, web_searcher_agent],
 )

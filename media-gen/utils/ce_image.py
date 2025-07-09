@@ -21,7 +21,7 @@ from models.exceptions import APIError, StorageError
 from utils.logger import logger
 
 # Constants
-MODEL_ID = "gemini-2.0-flash-exp-image-generation"
+MODEL_ID = "gemini-2.0-flash-preview-image-generation"
 MAX_OUTPUT_TOKENS = 8192
 TEMPERATURE = 1
 TOP_P = 0.95
@@ -65,7 +65,7 @@ def generate_image_by_gemini(
             top_p=TOP_P,
             top_k=TOP_K,
             max_output_tokens=MAX_OUTPUT_TOKENS,
-            response_modalities=["image", "text"],
+            response_modalities=["IMAGE", "TEXT"],
             safety_settings=[
                 types.SafetySetting(
                     category="HARM_CATEGORY_CIVIC_INTEGRITY",
@@ -85,10 +85,10 @@ def generate_image_by_gemini(
 
         # Process response
         for part in response.candidates[0].content.parts:
-            if part.text is not None:
-                logger.info("Received text response")
-                return part.text, "text"
-            elif part.inline_data is not None:
+            # if part.text is not None:
+            #     logger.info("Received text response")
+            #     return part.text, "text"
+            if part.inline_data is not None:
                 try:
                     # Create user storage directory
                     local_storage = Path(LOCAL_STORAGE) / whoami
