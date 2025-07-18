@@ -71,7 +71,7 @@ def develope_story(characters, setting, plot, number_of_scenes, duration_per_sce
     system_instruction, prompt = develop_story_prompt(characters, setting, plot, number_of_scenes, duration_per_scene, style)
     history = ""
     logger.info(f"Developing story with prompt: {prompt}")
-    string_response = call_llm(system_instruction, prompt, history, "gemini-2.5-pro-exp-03-25")
+    string_response = call_llm(system_instruction, prompt, history, "gemini-2.5-flash")
     # Save full string respose to file
     with open("tmp/images/default/story.json", "w") as f:
         f.write(string_response)
@@ -165,7 +165,7 @@ def show_generated_videos():
 def generate_story(idea):
     system_instruction, prompt = generate_story_prompt(idea)
     history = ""
-    string_response = call_llm(system_instruction, prompt, history, "gemini-2.5-pro-exp-03-25")
+    string_response = call_llm(system_instruction, prompt, history, "gemini-2.5-flash")
     json_response = json.loads(string_response)
     characters = ""
     for c in json_response["characters"]:
