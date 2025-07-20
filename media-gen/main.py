@@ -48,6 +48,7 @@ with gr.Blocks(theme=gr.themes.Glass(), title="Creative GeN/Studio") as demo:
         with gr.Column(scale=1):
             tb_whoami = gr.Textbox(value="", interactive=False, visible=False)
             tb_file_in_gcs = gr.Textbox(value="", interactive=False, visible=False)
+            tb_file_in_gcs_last = gr.Textbox(value="", interactive=False, visible=False)
             gr.Button("Logout", link="/logout", scale=1)
             
     # Create tabs
@@ -60,6 +61,7 @@ with gr.Blocks(theme=gr.themes.Glass(), title="Creative GeN/Studio") as demo:
     (
         veo_model_id,
         input_first_image,
+        input_last_image,
         tb_prompt_video,
         tb_negative_prompt,
         dd_type,
@@ -101,6 +103,11 @@ with gr.Blocks(theme=gr.themes.Glass(), title="Creative GeN/Studio") as demo:
         inputs=[input_first_image, tb_whoami],
         outputs=tb_file_in_gcs
     )
+    input_last_image.upload(
+        upload_image,
+        inputs=[input_last_image, tb_whoami],
+        outputs=tb_file_in_gcs_last
+    )
     
     btn_generate_video.click(
         generate_videos,
@@ -108,6 +115,7 @@ with gr.Blocks(theme=gr.themes.Glass(), title="Creative GeN/Studio") as demo:
             veo_model_id,
             tb_whoami,
             tb_file_in_gcs,
+            tb_file_in_gcs_last,
             tb_prompt_video,
             tb_negative_prompt,
             dd_type,

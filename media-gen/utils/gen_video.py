@@ -74,6 +74,7 @@ def send_request_to_google_api(api_endpoint: str, data: Optional[Dict[str, Any]]
 def compose_videogen_request(
     prompt: str,
     image_uri: Optional[str],
+    image_uri_last: Optional[str],
     gcs_uri: str,
     seed: int,
     aspect_ratio: str,
@@ -82,7 +83,7 @@ def compose_videogen_request(
     person_generation: str = "allow_adult",
     enhance_prompt: str = "true",
     duration_seconds: int = 8,
-    generate_audio: str = "true",
+    generate_audio: Optional[str] = None,
     resolution: str = "720p"
 ) -> Dict[str, Any]:
     """
@@ -109,23 +110,41 @@ def compose_videogen_request(
     instance = {"prompt": prompt}
     if image_uri:
         instance["image"] = {"gcsUri": image_uri, "mimeType": "png"}
+    if image_uri_last:
+        instance["lastFrame"] = {"gcsUri": image_uri_last, "mimeType": "png"}
     
+    if generate_audio:
+        return {
+            "instances": [instance],
+            "parameters": {
+                "storageUri": gcs_uri,
+                "sampleCount": sample_count,
+                "seed": seed,
+                "aspectRatio": aspect_ratio,
+                "negativePrompt": negative_prompt,
+                "personGeneration": person_generation,
+                "resolution": resolution,
+                "enhancePrompt": enhance_prompt.lower() == "true",
+                "durationSeconds": duration_seconds,
+                "generateAudio": generate_audio.lower() == "true"
+            },
+        }
+    else:
+        return {
+            "instances": [instance],
+            "parameters": {
+                "storageUri": gcs_uri,
+                "sampleCount": sample_count,
+                "seed": seed,
+                "aspectRatio": aspect_ratio,
+                "negativePrompt": negative_prompt,
+                "personGeneration": person_generation,
+                "resolution": resolution,
+                "enhancePrompt": enhance_prompt.lower() == "true",
+                "durationSeconds": duration_seconds
+            },
+        }
     
-    return {
-        "instances": [instance],
-        "parameters": {
-            "storageUri": gcs_uri,
-            "sampleCount": sample_count,
-            "seed": seed,
-            "aspectRatio": aspect_ratio,
-            "negativePrompt": negative_prompt,
-            "personGeneration": person_generation,
-            "resolution": resolution,
-            "enhancePrompt": enhance_prompt.lower() == "true",
-            "durationSeconds": duration_seconds,
-            "generateAudio": generate_audio.lower() == "true"
-        },
-    }
 
 def fetch_operation(model_id: str, lro_name: str, itr: int = MAX_RETRIES) -> Dict[str, Any]:
     """
@@ -193,9 +212,13 @@ def text_to_video(
         ValueError: If input parameters are invalid
         APIError: If the API request fails
     """
+    logger.info(f"model_id: {model_id}")
     logger.info(f"Starting text-to-video generation with prompt: {prompt}")
+    if "2.0" in model_id:
+        # handle logic for 2.0 model
+        generate_audio = None
     req = compose_videogen_request(
-        prompt, None, output_gcs, seed, aspect_ratio, sample_count, 
+        prompt, None, None, output_gcs, seed, aspect_ratio, sample_count, 
         negative_prompt, "allow_adult", enhance, durations, generate_audio, resolution
     )
     logger.info(f"Composed request: {json.dumps(req, indent=4)}")
@@ -208,6 +231,7 @@ def image_to_video(
     model_id: str,
     prompt: str,
     image_gcs: str,
+    image_gcs_last: str,
     seed: int,
     aspect_ratio: str,
     sample_count: int,
@@ -225,6 +249,7 @@ def image_to_video(
         model_id: The ID of the model to use
         prompt: The text prompt describing the video to generate
         image_gcs: GCS URI of the input image
+        image_gcs_last: GCS URI of the input last image
         seed: Random seed for generation (0-4294967295)
         aspect_ratio: Video aspect ratio (1:1, 9:16, 16:9, 4:3, 3:4)
         sample_count: Number of videos to generate (1-5)
@@ -244,15 +269,33 @@ def image_to_video(
         ValueError: If input parameters are invalid
         APIError: If the API request fails
     """
+    logger.info(f"model_id: {model_id}")
     logger.info(f"Starting image-to-video generation with prompt: {prompt}")
-    req = compose_videogen_request(
-        prompt, image_gcs, output_gcs, seed, aspect_ratio, sample_count,
-        negative_prompt, "allow_adult", enhance, durations, generate_audio, resolution
-    )
+    
+    if "2.0" in model_id:
+        # handle logic for 2.0 model
+        logger.info(f"image_gcs: {image_gcs}")
+        logger.info(f"image_gcs_last: {image_gcs_last}")
+        generate_audio = None
+        if image_gcs_last and image_gcs_last!="":
+            req = compose_videogen_request(
+                prompt, image_gcs, image_gcs_last, output_gcs, seed, aspect_ratio, sample_count,
+                negative_prompt, "allow_adult", enhance, durations, generate_audio, resolution
+            )
+        else:
+            req = compose_videogen_request(
+                prompt, image_gcs, None, output_gcs, seed, aspect_ratio, sample_count,
+                negative_prompt, "allow_adult", enhance, durations, generate_audio, resolution
+            )
+    else:
+        req = compose_videogen_request(
+            prompt, image_gcs, None, output_gcs, seed, aspect_ratio, sample_count,
+            negative_prompt, "allow_adult", enhance, durations, generate_audio, resolution
+        )
     logger.info(f"Composed request: {json.dumps(req, indent=4)}")
     resp = send_request_to_google_api(prediction_endpoint(model_id), req)
-    logger.info(f"Received initial response for operation: {resp['name']}")
-    r_resp = fetch_operation(resp["name"])
+    logger.info(f"Received initial response for operation: {resp}")
+    r_resp = fetch_operation(model_id, resp["name"])
     return r_resp, {"req": req, "resp": r_resp}
 
 def copy_gcs_file_to_local(gcs_uri: str, local_file_path: str) -> None:

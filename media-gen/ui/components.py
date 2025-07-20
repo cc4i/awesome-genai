@@ -33,6 +33,7 @@ def create_video_tab() -> Tuple[gr.Tab, List[Any]]:
             veo_model_id = gr.Radio(
                 label="Model",
                 choices=VIDEO_MODELS,
+                value=VIDEO_MODELS[1],
                 interactive=True
             )
             
@@ -54,7 +55,14 @@ def create_video_tab() -> Tuple[gr.Tab, List[Any]]:
                 """)
             with gr.Column(scale=1):
                 input_first_image = gr.Image(
-                    label="Image for Image-to-Video (Recommended: 1280 x 720 or 720 x 1280)",
+                    label="First frame for Frame-to-Video (Recommended: 1280x720 or 720x1280)",
+                    type="filepath",
+                    show_download_button=True,
+                    interactive=True
+                )
+            with gr.Column(scale=1):
+                input_last_image = gr.Image(
+                    label="Last frame for Frame-to-Video as loop/interpolation",
                     type="filepath",
                     show_download_button=True,
                     interactive=True
@@ -121,7 +129,7 @@ def create_video_tab() -> Tuple[gr.Tab, List[Any]]:
             )
         with gr.Row():
             cb_loop_seamless = gr.Checkbox(
-                label="Video loop seamless(add first frame to the end)",
+                label="Video loop seamless (Adding first frame to the end by ffmpeg)",
                 value=False,
                 interactive=True
             )
@@ -154,6 +162,7 @@ def create_video_tab() -> Tuple[gr.Tab, List[Any]]:
     components = [
         veo_model_id,
         input_first_image,
+        input_last_image,
         tb_prompt_video,
         tb_negative_prompt,
         dd_type,
@@ -186,6 +195,7 @@ def create_image_tab() -> Tuple[gr.Tab, List[Any]]:
             imagen_model_id = gr.Radio(
                 label="Model",
                 choices=IMAGE_MODELS,
+                value=IMAGE_MODELS[2],
                 interactive=True
             )
         with gr.Row():

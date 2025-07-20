@@ -130,6 +130,7 @@ def generate_videos(
     veo_model_id: str,
     whoami: str,
     file_in_gcs: str,
+    file_in_gcs_last: str,
     prompt: str,
     negative_prompt: str,
     type: str,
@@ -148,7 +149,8 @@ def generate_videos(
     Args:
         veo_model_id: The ID of the model to use
         whoami: User identifier
-        file_in_gcs: GCS path of input image (for image-to-video)
+        file_in_gcs: GCS path of input first image (for image-to-video)
+        file_in_gcs_last: GCS path of input last image (for image-to-video)
         prompt: Text prompt for generation
         negative_prompt: Negative prompt for generation
         type: Type of video generation ("Text-to-Video" or "Image-to-Video")
@@ -192,7 +194,8 @@ def generate_videos(
                 model_id=veo_model_id,
                 prompt=prompt,
                 image_gcs=file_in_gcs,
-                seed=int(   seed),
+                image_gcs_last=file_in_gcs_last,
+                seed=int(seed),
                 aspect_ratio=aspect_ratio,
                 sample_count=int(sample_count),
                 output_gcs=output_gcs,
