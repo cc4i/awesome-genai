@@ -103,9 +103,9 @@ Summaries:
 fun_searcher_agent = LlmAgent(
     name="fun_searcher_agent",
     model=config.worker_model,
-    planner=BuiltInPlanner(
-        thinking_config=genai_types.ThinkingConfig(include_thoughts=True)
-    ),
+    # planner=BuiltInPlanner(
+    #     thinking_config=genai_types.ThinkingConfig(include_thoughts=True)
+    # ),
 
     description="You are a fun research agent that can search the web for fun and interesting information.",
     instruction="""

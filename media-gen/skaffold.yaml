@@ -7,7 +7,7 @@ build:
   tagPolicy:
     customTemplate:
       # template: "{{env \"RELEASE_TAG\"}}-{{.GIT_COMMIT_SHORT}}"
-      template: "v1-{{.GIT_COMMIT_SHORT}}"
+      template: "v2-{{.GIT_COMMIT_SHORT}}"
       components: # Define components used in the template
        - name: GIT_COMMIT_SHORT
          gitCommit:

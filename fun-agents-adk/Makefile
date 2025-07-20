@@ -8,8 +8,6 @@ playground:
 	@echo "==============================================================================="
 	@echo "| 🚀 Starting your agent playground...                                        |"
 	@echo "|                                                                             |"
-	@echo "| 💡 Try asking: What's payment market in New Zealand?                        |"
-	@echo "|                                                                             |"
 	@echo "| 🔍 IMPORTANT: Select the 'app' folder to interact with your agent.          |"
 	@echo "==============================================================================="
 	uv run adk web --port 8501

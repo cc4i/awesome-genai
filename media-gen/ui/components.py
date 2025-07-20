@@ -98,6 +98,12 @@ def create_video_tab() -> Tuple[gr.Tab, List[Any]]:
                 interactive=True
             )
         with gr.Row():
+            dd_resolution = gr.Dropdown(
+                label="Resolution",
+                value="720p",
+                choices=["720p", "1080p"],
+                interactive=True
+            )
             dd_enhancement = gr.Dropdown(
                 label="Enhancement",
                 value="true",
@@ -154,6 +160,7 @@ def create_video_tab() -> Tuple[gr.Tab, List[Any]]:
         dd_aspect_ratio,
         dd_seed,
         dd_sample_count,
+        dd_resolution,
         dd_enhancement,
         dd_duration,
         dd_generate_audio,
@@ -322,23 +329,7 @@ def create_checking_tab() -> Tuple[gr.Tab, List[Any]]:
             input_checking_image.change(show, inputs=input_checking_image, outputs=what_models_see_image)
             
     components = [input_checking_image, what_models_see_image]
-    return checking_tab, components 
-
-
-def create_marketing_video_tab() -> Tuple[gr.Tab, List[Any]]:
-    """
-    Create the marketing video generation tab.
-    
-    Returns:
-        Tuple of (marketing video tab, list of components)
-    """
-    with gr.Tab("Marketing video") as marketing_video_tab:
-        with gr.Row():
-            gr.Textbox(label="Prompt", value="", lines=6, interactive=True)
-            gr.Button(label="Generate", icon="images/gemini-star.png")
-
-            
-            
+    return checking_tab, components         
             
             
             

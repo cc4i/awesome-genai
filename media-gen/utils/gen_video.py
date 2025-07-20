@@ -5,18 +5,13 @@ Video generation utilities using Google's Veo 2.0 model.
 import time
 import os
 import uuid
-import logging
-import cv2
 from typing import Dict, List, Optional, Tuple, Any
 import google.auth
 import google.auth.transport.requests
-import mediapy as media
 import requests
 from google.cloud import storage
-from io import BytesIO
 import subprocess
 import tempfile
-import shutil
 import json
 
 from utils.llm import call_llm
@@ -87,7 +82,8 @@ def compose_videogen_request(
     person_generation: str = "allow_adult",
     enhance_prompt: str = "true",
     duration_seconds: int = 8,
-    generate_audio: str = "true"
+    generate_audio: str = "true",
+    resolution: str = "720p"
 ) -> Dict[str, Any]:
     """
     Composes a request for video generation.
@@ -104,6 +100,7 @@ def compose_videogen_request(
         enhance_prompt: Whether to enhance the prompt
         duration_seconds: Video duration in seconds
         generate_audio: Whether to generate audio ("true" or "false")
+        resolution: Video resolution (720p, 1080p), only for veo-3.0 model
 
     Returns:
         Dictionary containing the composed request
@@ -112,6 +109,7 @@ def compose_videogen_request(
     instance = {"prompt": prompt}
     if image_uri:
         instance["image"] = {"gcsUri": image_uri, "mimeType": "png"}
+    
     
     return {
         "instances": [instance],
@@ -122,9 +120,10 @@ def compose_videogen_request(
             "aspectRatio": aspect_ratio,
             "negativePrompt": negative_prompt,
             "personGeneration": person_generation,
-            "enhancePrompt": enhance_prompt,
+            "resolution": resolution,
+            "enhancePrompt": enhance_prompt.lower() == "true",
             "durationSeconds": duration_seconds,
-            "generateAudio": generate_audio
+            "generateAudio": generate_audio.lower() == "true"
         },
     }
 
@@ -166,7 +165,8 @@ def text_to_video(
     negative_prompt: str,
     enhance: str,
     durations: int,
-    generate_audio: str
+    generate_audio: str,
+    resolution: str
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
     Generate a video from text using Google's Veo 2.0 model.
@@ -182,6 +182,7 @@ def text_to_video(
         enhance: Whether to enhance the prompt ("yes" or "no")
         durations: Video duration in seconds (5-8)
         generate_audio: Whether to generate audio ("true" or "false")
+        resolution: Video resolution (720p, 1080p), only for veo-3.0 model
 
     Returns:
         Tuple containing:
@@ -195,7 +196,7 @@ def text_to_video(
     logger.info(f"Starting text-to-video generation with prompt: {prompt}")
     req = compose_videogen_request(
         prompt, None, output_gcs, seed, aspect_ratio, sample_count, 
-        negative_prompt, "allow_adult", enhance, durations, generate_audio
+        negative_prompt, "allow_adult", enhance, durations, generate_audio, resolution
     )
     logger.info(f"Composed request: {json.dumps(req, indent=4)}")
     resp = send_request_to_google_api(prediction_endpoint(model_id), req)
@@ -214,7 +215,8 @@ def image_to_video(
     negative_prompt: str,
     enhance: str,
     durations: int,
-    generate_audio: str
+    generate_audio: str,
+    resolution: str
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
     Generate a video from an image using Google's Veo 2.0 model.
@@ -231,6 +233,7 @@ def image_to_video(
         enhance: Whether to enhance the prompt ("yes" or "no")
         durations: Video duration in seconds (5-8)
         generate_audio: Whether to generate audio ("true" or "false")
+        resolution: Video resolution (720p, 1080p), only for veo-3.0 model
 
     Returns:
         Tuple containing:
@@ -244,7 +247,7 @@ def image_to_video(
     logger.info(f"Starting image-to-video generation with prompt: {prompt}")
     req = compose_videogen_request(
         prompt, image_gcs, output_gcs, seed, aspect_ratio, sample_count,
-        negative_prompt, "allow_adult", enhance, durations, generate_audio
+        negative_prompt, "allow_adult", enhance, durations, generate_audio, resolution
     )
     logger.info(f"Composed request: {json.dumps(req, indent=4)}")
     resp = send_request_to_google_api(prediction_endpoint(model_id), req)

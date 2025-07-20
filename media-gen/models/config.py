@@ -54,7 +54,7 @@ MAX_DURATION = 8
 DEFAULT_DURATION = 8
 
 # Model IDs
-VIDEO_MODELS = ["veo-2.0-generate-001", "veo-3.0-generate-preview"]
+VIDEO_MODELS = ["veo-2.0-generate-001", "veo-3.0-generate-preview", "veo-3.0-fast-generate-preview"]
 IMAGE_MODELS = ["imagen-3.0-generate-002", "imagen-3.0-fast-generate-001", "imagen-4.0-generate-preview-06-06"]
 
 # Color mapping for harm levels

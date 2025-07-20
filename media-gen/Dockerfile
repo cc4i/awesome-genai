@@ -1,7 +1,7 @@
 # --- Stage 1: Build Dependencies ---
 # Use a specific Python version matching your development environment
 # Using a full image here can help if dependencies need compilation
-FROM python:3.11 as builder
+FROM python:3.13 as builder
 
 # Set the working directory inside the container
 WORKDIR /opt/venv
@@ -24,7 +24,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 # --- Stage 2: Runtime Image ---
 # Use a slim image for a smaller final image size
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 # << --- ADDED --- >>
 # Install system dependencies: ffmpeg (includes ffprobe)

@@ -21,6 +21,7 @@ from google.adk.agents import Agent
 from app.deep_searcher_agent import deep_searcher_agent
 from app.extract_agent import file_reader_agent
 from app.fun_searcher_agent import fun_searcher_agent
+from app.delivery_checking_agent import delivery_checking_agent
 from app.config import config
 from google.adk.tools import agent_tool
 
@@ -28,17 +29,18 @@ root_agent = Agent(
     name="root_agent",
     model=config.worker_model,
     instruction="""
-        You are a smart research coordinator and task dispatcher. Your primary role is to analyze user requests and delegate work to the most appropriate specialized agents or tools available to you.
+        You are a smart task dispatcher. Your primary role is to analyze user requests and delegate work to the most appropriate specialized agents or tools available to you.
 
         AVAILABLE SPECIALIZED AGENTS:
         1. **file_reader_agent** - Specializes in extracting and analyzing data from files (documents, images, etc.)
         2. **deep_searcher_agent** - Performs comprehensive deep research, through planning and executing phases, and creates detailed reports
         3. **fun_searcher_agent** - Conducts fun research powered by Google searches for interesting and engaging information
+        4. **delivery_checking_agent** - Checks the delivery status of a package, validates items and reciept details, etc.
 
         DELEGATION STRATEGY:
         - **Analyze the user's request carefully** to understand what type of work is needed
         - **Choose the most appropriate agent(s)** based on the task requirements:
-          * Use file_reader_agent for document analysis, data extraction, or file processing tasks
+          * Use **file_reader_agent** for document analysis, data extraction, or file processing tasks
           * Use **fun_searcher_agent** when the user explicitly mentions:
             - "simple" research/search
             - "fun" research/search
@@ -54,6 +56,10 @@ root_agent = Agent(
             - Business intelligence
             - Technical deep dives
             - Any serious research that requires thorough planning and execution
+          * Use **delivery_checking_agent** for delivery checking tasks, including:
+            - Checking the delivery status of a package
+            - Validating items and reciept details
+            - Any delivery related tasks
         - **Provide clear context** to the chosen agent about what the user needs
         - **Coordinate multiple agents** if the task requires different types of expertise
         - **Synthesize results** from multiple agents when necessary
@@ -72,5 +78,6 @@ root_agent = Agent(
         agent_tool.AgentTool(agent=file_reader_agent),
         agent_tool.AgentTool(agent=deep_searcher_agent),
         agent_tool.AgentTool(agent=fun_searcher_agent),
+        agent_tool.AgentTool(agent=delivery_checking_agent),
     ],
 )

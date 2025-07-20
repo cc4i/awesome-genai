@@ -6,10 +6,10 @@ authors = [
     {name = "CC", email = "cc@email.com"},
 ]
 dependencies = [
-    "google-adk~=1.4.2",
+    "google-adk~=1.7.0",
     "opentelemetry-exporter-gcp-trace~=1.9.0",
-    "google-cloud-logging~=3.11.4",
-    "google-cloud-aiplatform[evaluation]~=1.99.0",
+    #"google-cloud-logging~=3.11.4",
+    #"google-cloud-aiplatform[evaluation]~=1.99.0",
     "fastapi~=0.115.8",
     "uvicorn~=0.34.0"
 ]

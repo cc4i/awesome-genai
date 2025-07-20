@@ -136,6 +136,7 @@ def generate_videos(
     aspect_ratio: str,
     seed: str,
     sample_count: int,
+    resolution: str,
     enhance: str,
     durations: int,
     generate_audio: str,
@@ -154,6 +155,7 @@ def generate_videos(
         aspect_ratio: Video aspect ratio
         seed: Random seed for generation (as string from UI)
         sample_count: Number of videos to generate
+        resolution: Video resolution (720p, 1080p), only for veo-3.0 model
         enhance: Whether to apply enhancement
         durations: Duration of each video in seconds
         generate_audio: Whether to generate audio
@@ -178,6 +180,7 @@ def generate_videos(
                 sample_count=int(sample_count),
                 output_gcs=output_gcs,
                 negative_prompt=negative_prompt,
+                resolution=resolution,
                 enhance=enhance,
                 durations=int(durations),
                 generate_audio=generate_audio
@@ -194,6 +197,7 @@ def generate_videos(
                 sample_count=int(sample_count),
                 output_gcs=output_gcs,
                 negative_prompt=negative_prompt,
+                resolution=resolution,
                 enhance=enhance,
                 durations=int(durations),
                 generate_audio=generate_audio
