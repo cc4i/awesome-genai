@@ -120,7 +120,7 @@ def random_image_prompt() -> str:
     return call_llm(
         system_instruction="You're prompt engineer, your task is to create a best prompt for specific model from Google.",
         prompt="""
-            Generate a random prompt to text-to-image for Google Imagen 3 to generate a creative, brilliant image for landscapes, or cars, or nature, or technology, etc., which should be breathtaking, a true feast for the eyes.
+            Generate a random prompt to text-to-image for Google Imagen to generate a creative, brilliant image for landscapes, or cars, or nature, or technology, etc., which should be breathtaking, a true feast for the eyes.
             *INSTRUCTION*:
             The following elements should be included in your prompt:
                 1. Subject: The first thing to think about with any prompt is the subject: the object, person, animal, or scenery you want an image of.

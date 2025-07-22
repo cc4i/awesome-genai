@@ -1,12 +1,13 @@
-# ADK: Minimal Agent Example
+# ADK for Fun Agents
 
 <img src="https://github.com/GoogleCloudPlatform/agent-starter-pack/blob/main/docs/images/adk_logo.png?raw=true" width="400">
 
-A basic agent built using the **[Google Agent Development Kit (ADK)](https://google.github.io/adk-docs/)**. This example demonstrates core ADK concepts like agent creation and tool integration in a minimal setup.
+The agents uses the `gemini-2.5-*` model family and is equipped with multiple sub agents as tool to showcase what's possible:
+*   `deep_searcher_agent`: Building deep research agent with ADK workflow.
+*   `fun_searcher_agent`: Demenstrating use Google Search tool.
+*   `extrac_agent`: Simulates info extracting, such as OCI, etc.
+*   `delivery_checking_agent`: Simulates checking missing items, delivery quality, etc.
 
-This agent uses the `gemini-2.0-flash` model and is equipped with two simple tools:
-*   `get_weather`: Simulates fetching weather (hardcoded for SF).
-*   `get_current_time`: Simulates fetching the time (hardcoded for SF).
 
 ## Additional Resources
 

@@ -27,22 +27,6 @@ steps:
       - "$_REGION"
       - "--project"
       - $_PROD_PROJECT_ID
-      - "--min-instances"
-      - "1"
-      - "--no-cpu-throttling"
-      - "--cpu"
-      - "4"
-      - "--memory"
-      - "4Gi"
-      - "--concurrency"
-      - "40"
-      - "--service-account"
-      - "${_CLOUD_RUN_APP_SA_EMAIL}"
-      - "--session-affinity"
-      - "--labels"
-      - "created-by=adk"
-      - "--set-env-vars"
-      - "COMMIT_SHA=${COMMIT_SHA}"
 
 substitutions:
   _PROD_PROJECT_ID: YOUR_PROD_PROJECT_ID

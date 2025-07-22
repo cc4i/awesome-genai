@@ -19,11 +19,11 @@ import vertexai
 from google import genai
 from google.genai import types
 
+
 # Constants
 VERTEXAI = os.getenv("VERTEXAI", "true").lower() == "true"
 LOCATION = "us-central1"
-# MODEL_ID = "gemini-live-2.5-flash-preview-native-audio"
-MODEL_ID = "gemini-2.5-flash-preview-native-audio-dialog"
+MODEL_ID = "gemini-live-2.5-flash-preview-native-audio"
 
 # Initialize Google Cloud clients
 credentials, project_id = google.auth.default()

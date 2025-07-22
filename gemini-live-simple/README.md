@@ -1,7 +1,7 @@
 # gemini-live-simple
 
 A real-time multimodal RAG agent powered by Gemini Live API, supporting audio/video/text chat with vector DB-backed responses
-Agent generated with [`googleCloudPlatform/agent-starter-pack`](https://github.com/GoogleCloudPlatform/agent-starter-pack) version `0.7.1`
+Agent generated with [`googleCloudPlatform/agent-starter-pack`](https://github.com/GoogleCloudPlatform/agent-starter-pack) version `0.9.2`
 
 ## Project Structure
 
@@ -44,12 +44,12 @@ make install && make playground
 | -------------------- | ------------------------------------------------------------------------------------------- |
 | `make install`       | Install all required dependencies using uv                                                  |
 | `make playground`    | Launch local development environment with backend and frontend|
-| `make backend`       | Deploy agent to Cloud Run |
+| `make backend`       | Deploy agent to Cloud Run (use `IAP=true` to enable Identity-Aware Proxy) |
 | `make local-backend` | Launch local development server |
 | `make ui`       | Launch Agent Playground front-end only |
 | `make test`          | Run unit and integration tests                                                              |
 | `make lint`          | Run code quality checks (codespell, ruff, mypy)                                             |
-| `make setup-dev-env` | Set up development environment resources using Terraform                                    |
+| `make setup-dev-env` | Set up development environment resources using Terraform                         |
 | `uv run jupyter lab` | Launch Jupyter notebook                                                                     |
 
 For full command options and usage, refer to the [Makefile](Makefile).

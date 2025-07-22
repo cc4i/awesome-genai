@@ -407,7 +407,7 @@ def random_video_prompt() -> str:
     return call_llm(
         system_instruction="You're prompt engineer, your task is to create a best prompt for specific model from Google.",
         prompt="""
-            Generate a random prompt to text-to-image for Google Veo2 to generate a creative, inspirational video for landscapes, or cars, or nature, or technology, etc., which should boasts a cinematic quality with meticulously crafted shots and vibrant colors,  breathtaking, a true feast for the eyes.
+            Generate a random prompt to text-to-image for Google Veo to generate a creative, inspirational video for landscapes, or cars, or nature, or technology, etc., which should boasts a cinematic quality with meticulously crafted shots and vibrant colors,  breathtaking, a true feast for the eyes.
             *INSTRUCTION*:
             The following elements should be included in your prompt:
                 1. Subject: The object, person, animal, or scenery that you want in your video.
@@ -434,11 +434,18 @@ def rewrite_video_prompt(prompt: str) -> str:
         An improved version of the prompt
     """
     return call_llm(
-        system_instruction="You're prompt engineer, your task is to create a best prompt for specific model from Google.",
+        system_instruction="You are a world-class prompt engineering expert. Your task is to take a user's prompt and rewrite it to be significantly more detailed, specific, and effective for Google models.",
         prompt=f"""
-            Rewrite the followng prompt for Google Veo2 to generate the best short video ever. Output as string only, without explanation.
+            Consider adding the following to enhance the prompt for Google Veo:
+            - A clear persona for the AI (e.g., "Act as an expert marketer...").
+            - A specific context or background.
+            - A detailed description of the desired output format (e.g., markdown, JSON, a list of bullet points).
+            - Key elements, constraints, or a specific tone to adopt.
+            - A step-by-step thinking instruction if the task is complex.
 
-            *PROMPT*: 
+            Return ONLY the rewritten, enhanced prompt. Do not include any explanations, preambles, or apologies.
+
+            Original prompt:
             {prompt}
         """,
         history=""

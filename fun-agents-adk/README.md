@@ -1,6 +1,6 @@
-# fun-agents-adk
+# A collection of fun Agents
 
-A base ReAct agent built with Google's Agent Development Kit (ADK)
+A collection of fun agents are built with Google's Agent Development Kit (ADK)
 Agent generated with [`googleCloudPlatform/agent-starter-pack`](https://github.com/GoogleCloudPlatform/agent-starter-pack) version `0.7.0`
 
 ## Project Structure
@@ -39,16 +39,17 @@ make install && make playground
 
 ## Commands
 
-| Command              | Description                                                                                 |
-| -------------------- | ------------------------------------------------------------------------------------------- |
-| `make install`       | Install all required dependencies using uv                                                  |
-| `make playground`    | Launch local development environment with backend and frontend - leveraging `adk web` command.|
-| `make backend`       | Deploy agent to Cloud Run |
+| Command | Description |
+| --- | --- |
+| `make install` | Install all required dependencies using uv |
+| `make playground` | Launch local development environment with backend and frontend - leveraging `adk web` command.|
+| `make cloud-run-backend` | Deploy agent to Cloud Run |
+| `make agent-engine-backend` | Launch local agent engine server |
 | `make local-backend` | Launch local development server |
-| `make test`          | Run unit and integration tests                                                              |
-| `make lint`          | Run code quality checks (codespell, ruff, mypy)                                             |
-| `make setup-dev-env` | Set up development environment resources using Terraform                                    |
-| `uv run jupyter lab` | Launch Jupyter notebook                                                                     |
+| `make test` | Run unit and integration tests |
+| `make lint` | Run code quality checks (codespell, ruff, mypy) |
+| `make setup-dev-env` | Set up development environment resources using Terraform |
+| `uv run jupyter lab` | Launch Jupyter notebook |
 
 For full command options and usage, refer to the [Makefile](Makefile).
 

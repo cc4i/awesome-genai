@@ -68,6 +68,7 @@ variable "cloud_run_app_roles" {
   type        = list(string)
   default = [
     "roles/run.invoker",
+    "roles/secretmanager.secretAccessor",
     "roles/aiplatform.user",
     "roles/discoveryengine.editor",
     "roles/logging.logWriter",

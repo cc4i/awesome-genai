@@ -85,34 +85,58 @@ async def run_live(video_mode: str) -> None:
   Args:
     video_mode: The video mode to use for the video. Can be CAMERA or SCREEN.
   """
-  pya = pyaudio.PyAudio()
-  video_mode_enum = video.VideoMode(video_mode)
-  # input processor = camera/screen streams + audio streams
-  # Note that the Live API requires audio/pcm mimetype (not audio/l16).
-  input_processor = video.VideoIn(
-      video_mode=video_mode_enum
-  ) + audio_io.PyAudioIn(pya, use_pcm_mimetype=True)
+  try:
+    pya = pyaudio.PyAudio()
+    print(f"PyAudio initialized successfully")
+    
+    video_mode_enum = video.VideoMode(video_mode)
+    print(f"Video mode set to: {video_mode}")
+    
+    # input processor = camera/screen streams + audio streams
+    # Try different audio configurations
+    try:
+      # First try with PCM format as recommended
+      input_processor = video.VideoIn(
+          video_mode=video_mode_enum
+      ) + audio_io.PyAudioIn(pya, use_pcm_mimetype=True)
+      print("Using PCM audio format")
+    except Exception as e:
+      print(f"PCM format failed: {e}, trying L16 format")
+      # Fallback to L16 format
+      input_processor = video.VideoIn(
+          video_mode=video_mode_enum  
+      ) + audio_io.PyAudioIn(pya, use_pcm_mimetype=False)
+    print("Input processor created successfully")
+  except Exception as e:
+    print(f"Error setting up audio/video: {e}")
+    raise
 
   # Calls the Live API. If you define your own live agent, this is the processor
   # that will likely be replaced. See live/commentator_cli.py for a more
   # advanced example.
-  live_processor = live_model.LiveProcessor(
-      api_key=API_KEY,
-      model_name='gemini-2.5-flash-preview-native-audio-dialog',
-      realtime_config=genai_types.LiveConnectConfig(
-          system_instruction=INSTRUCTION_PARTS,
-          # Ground with Google Search
-          tools=[genai_types.Tool(google_search=genai_types.GoogleSearch())],
-          # Return the transcription of the model audio.
-          output_audio_transcription={},
-          # Enable affective dialog (only available for native audio out models)
-          enable_affective_dialog=True,
-          response_modalities=['AUDIO'],
-          # Set the language for the Live API.
-          speech_config={'language_code': 'en-US'},
-      ),
-      http_options=genai_types.HttpOptions(api_version='v1alpha'),
-  )
+  try:
+    print("Creating Live API processor...")
+    live_processor = live_model.LiveProcessor(
+        api_key=API_KEY,
+        model_name='gemini-2.0-flash-exp',
+        realtime_config=genai_types.LiveConnectConfig(
+            system_instruction=INSTRUCTION_PARTS,
+            response_modalities=['AUDIO'],
+            # Set the language for the Live API.
+            speech_config={'language_code': 'en-US'},
+        ),
+        http_options=genai_types.HttpOptions(api_version='v1alpha'),
+    )
+    print("Live API processor created successfully")
+    print(live_processor)
+  except Exception as e:
+    print(f"Error creating Live API processor: {e}")
+    print("This might be due to:")
+    print("1. Invalid API key")
+    print("2. API key doesn't have Live API access")
+    print("3. Model not available")
+    print("4. Network connectivity issues")
+    raise
 
   # Plays the audio parts. This processor also handles interruptions and makes
   # sure the audio output stops when the user is speaking.

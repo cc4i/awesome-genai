@@ -20,6 +20,8 @@ steps:
         "build",
         "-t",
         "$_REGION-docker.pkg.dev/$PROJECT_ID/$_ARTIFACT_REGISTRY_REPO_NAME/$_CONTAINER_NAME",
+        "--build-arg",
+        "COMMIT_SHA=$COMMIT_SHA",
         ".",
       ]
   - name: "gcr.io/cloud-builders/docker"
@@ -43,22 +45,6 @@ steps:
       - "${_REGION}"
       - "--project"
       - "${_STAGING_PROJECT_ID}"
-      - "--min-instances"
-      - "1"
-      - "--no-cpu-throttling"
-      - "--cpu"
-      - "4"
-      - "--memory"
-      - "4Gi"
-      - "--concurrency"
-      - "40"
-      - "--service-account"
-      - "${_CLOUD_RUN_APP_SA_EMAIL}"
-      - "--session-affinity"
-      - "--labels"
-      - "created-by=adk"
-      - "--set-env-vars"
-      - "COMMIT_SHA=${COMMIT_SHA}"
 
   # Fetch Staging Service URL
   - name: "gcr.io/cloud-builders/gcloud"
@@ -88,9 +74,8 @@ steps:
       - |
         export _ID_TOKEN=$(cat id_token.txt)
         export _STAGING_URL=$(cat staging_url.txt)
-        pip install uv==0.6.12 --user && uv sync --locked
-        uv add locust==2.32.6
-        uv run locust -f tests/load_test/load_test.py \
+        pip install locust==2.31.1 --user
+        locust -f tests/load_test/load_test.py \
         --headless \
         -H $$_STAGING_URL \
         -t 30s -u 10 -r 0.5 \

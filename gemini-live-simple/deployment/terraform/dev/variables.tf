@@ -55,4 +55,3 @@ variable "cloud_run_app_roles" {
   ]
 }
 
-
