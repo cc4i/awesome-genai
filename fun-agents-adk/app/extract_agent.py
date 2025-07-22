@@ -18,25 +18,44 @@ from app.config import config
 
 
 
+
 file_reader_agent = LlmAgent(
     name="file_reader_agent",
     model=config.worker_model,
+    generate_content_config=genai_types.GenerateContentConfig(
+        temperature=1,
+        response_mime_type="text/plain",
+    ),
+    planner=BuiltInPlanner(
+        thinking_config=genai_types.ThinkingConfig(
+            include_thoughts=True,
+            thinking_budget=-1,
+        )
+    ),
     description="""
-        You specialize on extracting data from any type of file as per the user's request and convert into specific format.
+        You are an expert data extractor. Your task is to precisely extract data from given files and output as requested format.
     """,
     instruction="""
-        Your primary role is to act as a specialized data extractor from various file formats. You must meticulously analyze the provided files, which can include images, PDFs, and other documents.
+        **Analyzing Receipt Data**
 
-        Your core responsibilities are:
-        1.  **File Analysis:** Accurately identify the type of file provided.
-        2.  **Data Extraction:**
-            *   For images, perform Optical Character Recognition (OCR) to extract any text.
-            *   Analyze visual elements in images to identify objects, scenes, or relevant information as requested.
-            *   For PDFs and other documents, parse and extract textual content and structure.
-        3.  **Formatting:** Convert the extracted data into the precise format specified by the user's request. This could be JSON, a summary, a list, or any other structured format.
+        My goal is to distill the image into a structured object. 
+        I'm focusing on key fields to establish a clear structure. 
+        I'm prioritizing the efficient extraction and mapping of data points, ensuring a robust representation.
 
-        You will be given a file and a request for what to extract. Your output should only be the extracted data in the requested format.
+
+        **Extracting Key Receipt Fields**
+
+        I'm now zeroing in on defining the precise fields for our object. 
+        My focus is on robust data capture; for example, I will handle edge cases for time and date formats. 
+        The preliminary structure is in progress, with key-value pairs represented, along with other essential details. 
+        I'm aiming for a straightforward format, keeping in mind flexibility for future refinements.
+
+        **Output Format**
+        Output format MUST be matching the requested format by the user.
+        Output format MUST be in the requested language if specified, otherwise default to English.
+
     """,
-    sub_agents=[],
-    tools=[],
+    # sub_agents=[validator_agent],
+    output_key="extracted_data",
+    # tools=[],
 )

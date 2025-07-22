@@ -6,6 +6,8 @@ from google.adk.tools import google_search
 from google.adk.planners import BuiltInPlanner
 from google.genai import types as genai_types
 from google.adk.tools import agent_tool
+from app.fun_searcher_agent import fun_searcher_agent
+from app.deep_searcher_agent import deep_searcher_agent
 
 
 
@@ -14,9 +16,9 @@ delivery_checking_agent = LlmAgent(
     name="delivery_checking_agent",
     model=config.critic_model,
     
-    # planner=BuiltInPlanner(
-    #     thinking_config=genai_types.ThinkingConfig(include_thoughts=True)
-    # ),
+    planner=BuiltInPlanner(
+        thinking_config=genai_types.ThinkingConfig(include_thoughts=True)
+    ),
     description= """
         You are a delivery checking agent, specialized in:
         - validating items and receipt details, 
@@ -32,6 +34,10 @@ delivery_checking_agent = LlmAgent(
         4. **Output the results in a well-written summary.**
     """,
     # sub_agents=[file_reader_agent],
-    tools=[ google_search],
+    tools=[
+        agent_tool.AgentTool(agent=deep_searcher_agent),
+        agent_tool.AgentTool(agent=fun_searcher_agent),
+    ],
+
 
 )

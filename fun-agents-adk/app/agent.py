@@ -24,6 +24,21 @@ from app.fun_searcher_agent import fun_searcher_agent
 from app.delivery_checking_agent import delivery_checking_agent
 from app.config import config
 from google.adk.tools import agent_tool
+from google.adk.code_executors import BuiltInCodeExecutor
+
+
+
+coding_agent = Agent(
+    model='gemini-2.0-flash',
+    name='coding_agent',
+     instruction="""
+     You are a code execution agent.
+     When given a code, write and execute Python code to calculate the result.
+     Return only the final numerical result as plain text, without markdown or code blocks.
+    """,
+    description="Executes Python code to perform calculations.",
+    code_executor=BuiltInCodeExecutor(),
+)
 
 root_agent = Agent(
     name="root_agent",
@@ -38,12 +53,13 @@ root_agent = Agent(
         2. **deep_searcher_agent** - Performs comprehensive deep research, through planning and executing phases, and creates detailed reports
         3. **fun_searcher_agent** - Conducts fun research powered by Google searches for interesting and engaging information
         4. **delivery_checking_agent** - Checks the delivery status of a package, validates items and reciept details, etc.
+        5. **coding_agent** - Executes code and provides detailed output.
 
         DELEGATION STRATEGY:
         - **Analyze the user's request carefully** to understand what type of work is needed
         - **Choose the most appropriate agent(s)** based on the task requirements:
           * Use **file_reader_agent** for document analysis, data extraction, or file processing tasks
-          * Use **fun_searcher_agent** when the user explicitly mentions:
+          * MUST USE **fun_searcher_agent** when the user explicitly mentions:
             - "simple" research/search
             - "fun" research/search
             - "quick" lookup
@@ -62,6 +78,12 @@ root_agent = Agent(
             - Checking the delivery status of a package
             - Validating items and reciept details
             - Any delivery related tasks
+          * Use **coding_agent** for any code execution tasks, including:
+            - Code execution
+            - Code debugging
+            - Code optimization
+            - Code refactoring
+            - Any code related tasks
         - **Provide clear context** to the chosen agent about what the user needs
         - **Coordinate multiple agents** if the task requires different types of expertise
         - **Synthesize results** from multiple agents when necessary
@@ -77,9 +99,12 @@ root_agent = Agent(
         Remember: You are the orchestrator. Your job is to ensure the user gets the best possible results by leveraging the right combination of specialized agents. When in doubt about research depth, always err on the side of thoroughness with deep_searcher_agent.
     """,
     tools=[
-        agent_tool.AgentTool(agent=file_reader_agent),
         agent_tool.AgentTool(agent=deep_searcher_agent),
         agent_tool.AgentTool(agent=fun_searcher_agent),
-        agent_tool.AgentTool(agent=delivery_checking_agent),
+        agent_tool.AgentTool(agent=coding_agent)
+    ],
+    sub_agents=[
+        file_reader_agent,
+        delivery_checking_agent,
     ],
 )

@@ -1,16 +1,39 @@
+# OCR
+## 1. Extract information from various images in different languages: Thai, Vietnamese, Indonesian, etc  
+- Translation
+- Extracting
+- Output with structure data: Json 
+1 x Food item (Vietnamese) , 1 x driving license (Thai), 1 x bank invoice/statement (Bahasa)
 
-# Etract menu and ranking by nutrion & calories
+### Prompt
 
-- Extract info from the image, output as json in English
+- Extract info from the image and output as json
+    + delivery-receipt-grab.jpg
+    + receipt-thai.jpg
+    + receipt-vn.webp
+
+- Extract info from the image, output as json in English.
+- Extract info from the image, output as xml in English without original words.
+- Reformat last output as json.
+
+
+## 2. Research
+- Fun research 
+- Deep research 
+
+### Prompt
+- Do fun search of above dishes and ranking by nutrition and calories, output as table
+- Do fun search of above food and recommend the heahtiest food for young kids
+
 - Reformat content, output as table, include name & description
 
-- Do fun search of above dishes and ranking by nutrition and calories, output as table
 
-- Recommend the heahtiest food for young kids
+## 3. Delivery helper to identify missing items 
 
-# Identify missing items 
-
+### Prompt
 - Check items based on receipt, if there's missing one?
++ bread-payment.jpg
++ bread-items.jpg
 
 - Check the images if there's missing item based on receipt
 - Describe the image
