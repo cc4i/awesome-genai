@@ -10,11 +10,16 @@
 
 # Identify missing items 
 
+- Check items based on receipt, if there's missing one?
+
 - Check the images if there's missing item based on receipt
+- Describe the image
+- Here's the receipt for first image, what's the potential missing item?
+
 - Draft a complain email to the restaurant based on all the information collected above.
 
 
->>>
+>>> Example 1
 Check items based on receipt, if there's missing one?
 
 + bread-payment.jpg
@@ -38,3 +43,8 @@ Crispy Cream Cheese Bun	1			Potentially Correct*
 An invoice discrepancy occurs when there is a mismatch between what was ordered and what was delivered. This can include incorrect quantities or wrong items.
 
 It is recommended to contact the vendor to report the missing and incorrect items. Many delivery services have a feature in their app or website to report these issues for a potential refund or credit.
+
+
+
+
+
