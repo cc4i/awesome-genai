@@ -27,7 +27,8 @@ from google.adk.tools import agent_tool
 
 root_agent = Agent(
     name="root_agent",
-    model=config.worker_model,
+    # LiveAPIs: gemini-live-2.5-flash-preview-native-audio
+    model="gemini-2.5-flash-preview-native-audio",
     instruction="""
         You are a smart task dispatcher. Your primary role is to analyze user requests and delegate work to the most appropriate specialized agents or tools available to you.
 
