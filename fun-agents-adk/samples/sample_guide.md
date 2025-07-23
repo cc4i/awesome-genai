@@ -50,7 +50,23 @@
 
 ## 4. Gemini spatial understanding
 
+### Prompt 
+- Detecting items
+- Detecting 2D stuff
+
 ../spatial-understanding
+
+
+## 5. Gemini Live APIs
+
+AI Studio or ADK 
+
+- Bidirectional communication: different language: all major ASEAN languages vs English
+    + Vietnam 
+    + Singapore English
+- Grounding with Google Search
+- Identify food + Google Search as tool to provide real time information
+- Identify objects: pens, anything
 
 
 
