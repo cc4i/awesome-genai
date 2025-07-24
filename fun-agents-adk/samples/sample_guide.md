@@ -13,6 +13,8 @@
     + delivery-receipt-grab.jpg
     + receipt-thai.jpg
     + receipt-vn.webp
+    + driver-example-th.jpg
+    + hk_ID_card.jpg
 
 - Extract info from the image, output as json in English.
 - Extract info from the image, output as xml in English without original words.

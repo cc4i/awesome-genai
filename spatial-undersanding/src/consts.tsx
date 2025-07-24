@@ -29,15 +29,15 @@ export const modelOptions = [
 ];
 
 export const imageOptions: string[] = [
-  "origami.jpg",
+  "beer-charger.jpg",
   "pumpkins.jpg",
   "clock.jpg",
-  "socks.jpg",
   "breakfast.jpg",
-  "cat.jpg",
+  "roti.jpg",
   "spill.jpg",
-  "fruit.jpg",
-  "baklava.jpg",
+  "beer-pencil.jpg",
+  "angus-steak.jpg",
+  "origami.jpg",
 ];
 
 export const lineOptions = {
