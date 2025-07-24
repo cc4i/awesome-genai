@@ -1,4 +1,4 @@
-# OCR
+# Demos for fun agents
 ## 1. Extract information from images in different languages: Thai, Vietnamese, Indonesian, etc  
 - Translation
 - Extracting
