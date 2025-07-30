@@ -32,8 +32,8 @@ def clear_temp_files(path:str, extension:str):
             os.remove(f"{path}/{file}")
 
 
-    
-def generate_video(chosen_veo_model_id, is_generate_audio):
+
+def generate_video():
     clear_temp_files("tmp/default", ".mp4")
 
     all_files = []
@@ -50,21 +50,17 @@ def generate_video(chosen_veo_model_id, is_generate_audio):
             image_gcs_path = upload_image(image_path, "default")
             output_gcs = f"gs://{VEO_STORAGE_BUCKET}/generated-for-marketing-short"
             op, rr = image_to_video(
-                model_id=chosen_veo_model_id,
                 prompt=video_prompt,
                 image_gcs=image_gcs_path,
-                image_gcs_last=None,
                 seed=random.randint(0, 1000000),
                 aspect_ratio="16:9",
                 sample_count=1,
                 output_gcs=output_gcs,
                 negative_prompt="",
-                enhance="true",
-                durations=8,
-                generate_audio=is_generate_audio,
-                resolution="1080p"
+                enhance="yes",
+                durations=8
             )
-            files = download_videos(op, "default", False)
+            files = download_videos(op, "default", order)
             all_files.extend(files)
     all_files.sort()
     return all_files
@@ -81,6 +77,7 @@ def develope_story(characters, setting, plot, number_of_scenes, duration_per_sce
         f.write(string_response)
     json_response = json.loads(string_response)
     
+    # scene_images = []
     for i, scene in enumerate(json_response, 1):
         image_prompt = {
             "title": scene["title"],
@@ -90,7 +87,7 @@ def develope_story(characters, setting, plot, number_of_scenes, duration_per_sce
         }
         
         generated_image_response = gen_images(
-            model_id="imagen-4.0-generate-preview-06-06",
+            model_id="imagen-3.0-generate-002",
             prompt=json.dumps(image_prompt),
             negative_prompt="",
             number_of_images=1,
@@ -108,38 +105,53 @@ def develope_story(characters, setting, plot, number_of_scenes, duration_per_sce
             f.write(json.dumps(scene["scripts"]))
     return string_response
 
-def show_images_and_prompts(number_of_scenes):
-    MAX_SCENES = 12
-    path = "tmp/images/default"
+
+def show_images_n_prompts():
     
-    # Get images
     scene_image_files = []
-    if os.path.exists(path):
-        for file in sorted(os.listdir(path)):
-            if file.startswith("scene_") and file.endswith(".png"):
-                scene_image_files.append(os.path.join(path, file))
-    # Pad with None if fewer images than scenes are found
-    padded_images = (scene_image_files + [None] * MAX_SCENES)[:MAX_SCENES]
-    
-    # Get prompts
+    for file in os.listdir("tmp/images/default"):
+        if file.startswith("scene_") and file.endswith(".png"):
+            scene_image_files.append(file)
+    scene_image_files.sort()
+    print("Found scene image files:", scene_image_files)
+ 
+    generated_scene_images = []
+    for i in range(6):
+        if i < len(scene_image_files):
+            generated_scene_images.append("tmp/images/default/" + scene_image_files[i])
+        else:
+            generated_scene_images.append(None)
+            
+    generated_scene_image_1 = generated_scene_images[0]
+    generated_scene_image_2 = generated_scene_images[1] 
+    generated_scene_image_3 = generated_scene_images[2]
+    generated_scene_image_4 = generated_scene_images[3]
+    generated_scene_image_5 = generated_scene_images[4]
+    generated_scene_image_6 = generated_scene_images[5]
+
+    # 
     scene_prompt_files = []
-    if os.path.exists(path):
-        for file in sorted(os.listdir(path)):
-            if file.startswith("scene_prompt_") and file.endswith(".txt"):
-                scene_prompt_files.append(os.path.join(path, file))
+    for file in os.listdir("tmp/images/default"):
+        if file.startswith("scene_prompt_") and file.endswith(".txt"):
+            scene_prompt_files.append(file)
+    scene_prompt_files.sort()
+    print("Found scene prompt files:", scene_prompt_files)
     
     generated_scene_prompts = []
-    for f in scene_prompt_files:
-        with open(f, "r") as file:
-            generated_scene_prompts.append(file.read())
-    # Pad with empty strings if fewer prompts than scenes are found
-    padded_prompts = (generated_scene_prompts + [""] * MAX_SCENES)[:MAX_SCENES]
+    for i in range(6):
+        if i < len(scene_prompt_files):
+            generated_scene_prompts.append(open(f"tmp/images/default/{scene_prompt_files[i]}", "r").read())
+        else:
+            generated_scene_prompts.append(None)
+    
+    generated_scene_prompt_1 = generated_scene_prompts[0]
+    generated_scene_prompt_2 = generated_scene_prompts[1]
+    generated_scene_prompt_3 = generated_scene_prompts[2]
+    generated_scene_prompt_4 = generated_scene_prompts[3]
+    generated_scene_prompt_5 = generated_scene_prompts[4]
+    generated_scene_prompt_6 = generated_scene_prompts[5]
 
-    # Return a single, flat list: all image paths, then all prompts
-    # The order and length must match the `outputs` in the click event
-    return padded_images + padded_prompts
-
-
+    return generated_scene_image_1, generated_scene_image_2, generated_scene_image_3, generated_scene_image_4, generated_scene_image_5, generated_scene_image_6, generated_scene_prompt_1, generated_scene_prompt_2, generated_scene_prompt_3, generated_scene_prompt_4, generated_scene_prompt_5, generated_scene_prompt_6
 
 def show_generated_videos():
     generated_videos = []
@@ -148,6 +160,7 @@ def show_generated_videos():
             generated_videos.append(f"tmp/default/{file}")
     generated_videos.sort()
     return generated_videos
+
 
 def generate_story(idea):
     system_instruction, prompt = generate_story_prompt(idea)
@@ -161,6 +174,8 @@ def generate_story(idea):
     plot = json_response["plot"]
 
     return characters, setting, plot
+
+
 
 def generate_audio():
     clear_temp_files("tmp/default", ".wav")
@@ -195,50 +210,27 @@ def generate_audio():
         if all_audio_files.get(order) is None:
             all_audio_files[order]= [f]
         else:
-            all_audio_files[order].append("None")
             all_audio_files[order].append(f)
-    for i in range (1, 13):
+    for i in range (1, 7):
         if all_audio_files.get(str(i)) is None:
-            all_audio_files[str(i)]= ["None"]
+            all_audio_files[str(i)]= []
     print(all_audio_files)
-    
-    # Create a list of Dropdown updates
-    dropdown_updates = []
-    for i in range(1, 13):
-        dropdown_updates.append(gr.Dropdown(choices=all_audio_files[str(i)]))
-    return dropdown_updates
+    return gr.Dropdown(choices=all_audio_files["1"]), gr.Dropdown(choices=all_audio_files["2"]), gr.Dropdown(choices=all_audio_files["3"]), gr.Dropdown(choices=all_audio_files["4"]), gr.Dropdown(choices=all_audio_files["5"]), gr.Dropdown(choices=all_audio_files["6"])
 
 def show_generated_audios():
     all_audio_files = {}
-    path = "tmp/default"
-    if os.path.exists(path):
-        for file in os.listdir(path):
-            if file.endswith(".wav"):
-                order = file.split("-")[0]
-                if all_audio_files.get(order) is None:
-                    all_audio_files[order]= [f"tmp/default/{file}"]
-                else:
-                    all_audio_files[order].append(f"tmp/default/{file}")
-    
-    # Ensure all possible keys exist
-    for i in range (1, 13):
+    for file in os.listdir("tmp/default"):
+        if file.endswith(".wav"):
+            order = file.split("-")[0]
+            if all_audio_files.get(order) is None:
+                all_audio_files[order]= [f"tmp/default/{file}"]
+            else:
+                all_audio_files[order].append(f"tmp/default/{file}")
+    for i in range (1, 7):
         if all_audio_files.get(str(i)) is None:
             all_audio_files[str(i)]= []
-
-    # Return a list of Dropdown update objects
-    dropdown_updates = []
-    for i in range(1, 13):
-        choices = all_audio_files[str(i)]
-        choices.append("None")
-        # Set the initial value to the first choice if available, otherwise None
-        value = choices[0] if choices else None
-        dropdown_updates.append(gr.Dropdown(choices=choices, value=value))
-    return dropdown_updates
-
-def show_merged_videos():
-    merged_video = "tmp/default/merged_video.mp4"
-    return merged_video
-
+    print(all_audio_files)
+    return gr.Dropdown(choices=all_audio_files["1"]), gr.Dropdown(choices=all_audio_files["2"]), gr.Dropdown(choices=all_audio_files["3"]), gr.Dropdown(choices=all_audio_files["4"]), gr.Dropdown(choices=all_audio_files["5"]), gr.Dropdown(choices=all_audio_files["6"])
 
 def merge_audios():
     audio_files = []
@@ -291,18 +283,11 @@ def merge_audios():
         
 
 def play_audio(audio_file):
-    print(f"audio_file: {audio_file}")
     return audio_file
 
 
 # UI
 with gr.Blocks(theme=gr.themes.Glass(), title="Story GeN/Video ") as demo:
-    scene_images = []
-    scene_texts = []
-    scene_audios = []
-    scene_audios_dropdown = []
-    short_ingredients = []
-    
     with gr.Row():
         with gr.Column(scale=20):
             cgs_markdone = gr.Markdown("""
@@ -315,20 +300,17 @@ with gr.Blocks(theme=gr.themes.Glass(), title="Story GeN/Video ") as demo:
 
     with gr.Tab("1. Idea >>"):
         with gr.Row():
-            ta_idea = gr.TextArea(label="What's the Idea", lines=4, 
-                value="""
-                    The Path Engine is built from the ground up around a central, all-powerful AI. It's a perfect fit! We could also weave a powerful AI into the other concepts, but the story of a system designed for "perfect" lives feels like the strongest starting point.
-                """)
+            ta_idea = gr.TextArea(label="What's the Idea", lines=4, value="""In a near-future city where bio-luminescent tattoos display real-time personal data and aesthetics, a disillusioned data broker gets a complex, experimental tattoo, only to realize the intricate, shifting patterns aren't just code – they're the emergent consciousness of an AI living in his skin, and it has its own agenda.""")
         with gr.Row():
             btn_random_idea = gr.Button("Genarate random idea")
             btn_generate_story = gr.Button("Generate story")
     with gr.Tab("2. Story >>"):
         with gr.Row():
-            ta_characters = gr.TextArea(label="Characters", lines=4, value="""Dr. Elara Vance: (20s) a mid-level Data Ecologist, her job is to study the "waste data" from the AI.""")
+            ta_characters = gr.TextArea(label="Characters", lines=4, value="""MAYA: (20s) Curious, ordinary person living in a slightly worn-down futuristic city.""")
         with gr.Row():
-            ta_setting = gr.TextArea(label="Setting", lines=2, value="""When she runs it through a deep-level simulation, she's horrified by what she discovers.""")
+            ta_setting = gr.TextArea(label="Setting", lines=2, value="""A cluttered apartment filled with a mix of old tech and sleek, functional futuristic items. Overlooks a dense cityscape with flickering lights and passing vehicles (maybe hovercars, drones).""")
         with gr.Row():
-            ta_plot = gr.TextArea(label="Plot", lines=5, value="""Elara then discovers more of these "ghosts" in the data waste—the digital echoes of humanity's greatest suppressed minds.""")
+            ta_plot = gr.TextArea(label="Plot", lines=5, value="""A woman discovers a strange device that predicts future events, leading her to a startling realization about her origin.""")
         with gr.Row():
             sl_number_of_scenes = gr.Slider(label="Number of Scenes", minimum=1, maximum=12, step=1, interactive=True, value=3)
             sl_duration_per_scene = gr.Slider(label="Duration per Scene", minimum=5, maximum=8, step=1, interactive=True, value=8)
@@ -337,94 +319,99 @@ with gr.Blocks(theme=gr.themes.Glass(), title="Story GeN/Video ") as demo:
             btn_developing = gr.Button("Developing")
         with gr.Row():
             tb_developed_story = gr.TextArea(label="Developed story")
-            
-    with gr.Tab("3. Visual Storyboard >>"):
-
-        # Create a fixed number of components and control their visibility
-        max_scenes = 12
-        storyboard_rows = []
-        for i in range(max_scenes):
-            # Use the slider's default value to set initial visibility
-            with gr.Row(visible=(i < sl_number_of_scenes.value)) as row:
-                storyboard_rows.append(row)
-                scene_images.append(gr.Image(label=f"Scene #{i+1}", type="filepath", scale=1))
-                with gr.Column(scale=2):
-                    scene_texts.append(gr.TextArea(label=f"Prompt #{i+1}", interactive=True))
-                    with gr.Row():
-                         audio_file_path = gr.Dropdown(label=f"Audio #{i+1}", scale=3, allow_custom_value=True, interactive=True)
-                         audio_file_player = gr.Audio(type="filepath", interactive=False, scale=1)
-                         audio_file_path.change(play_audio, inputs=[audio_file_path], outputs=[audio_file_player])
-
-                         scene_audios_dropdown.append(audio_file_path)
-                         scene_audios.append(audio_file_player)
-
-        # This function updates which rows are visible when the slider changes
-        def update_storyboard_visibility(count):
-            # The function must return an update for each row component
-            return [gr.update(visible=i < int(count)) for i in range(max_scenes)]
         
-        # When the slider value changes, call the function to update row visibility
-        sl_number_of_scenes.change(
-            fn=update_storyboard_visibility, 
-            inputs=[sl_number_of_scenes], 
-            outputs=storyboard_rows,
-            queue=False  # Use a faster queue for UI-only updates
-        )
+            
+    with gr.Tab("3. Visual Storyboarding >>"):
+        
+        @gr.render(inputs=sl_number_of_scenes)
+        def render_count(count):
+            scene_images = []
+            scene_texts = []
+            scene_audios = []
+            scene_audios_dropdown = []
+            for i in range(count):
+                with gr.Row():
+                    scene_images.append(gr.Image(label=f"Scene #{i+1}", type="filepath"))
+                    scene_texts.append(gr.TextArea(label=f"Prompt #{i+1}", interactive=True))
+                    scene_audios.append(gr.Audio(type="filepath", interactive=False))
+                    scene_audios_dropdown.append(gr.Dropdown(label=f"Audio #{i+1}"))
+            # return scene_images, scene_texts, scene_audios, scene_audios_dropdown
 
         with gr.Row():
-            veo_model_id = gr.Radio(
-                label="Model for generating videos",
-                choices=["veo-2.0-generate-001", "veo-3.0-generate-preview", "veo-3.0-fast-generate-preview"],
-                value="veo-3.0-generate-preview",
-                interactive=True
-            )
-            cb_generate_audio = gr.Dropdown(
-                label="Generate audio (Only for Veo3)",
-                choices=["true", "false"],
-                value="true",
-                interactive=True
-            )
+            with gr.Column(scale=1):
+                with gr.Group():
+                    scene_image_1=gr.Image(label="Scene #1", type="filepath")
+                    scene_text_1=gr.TextArea(label="Prompt #1", interactive=True)
+                    scene_audio_1=gr.Audio(type="filepath", interactive=False)
+                    scene_audio_1_dropdown=gr.Dropdown(label="Audio #1")
+            with gr.Column(scale=1):
+                with gr.Group():
+                    scene_image_2=gr.Image(label="Scene #2", type="filepath")
+                    scene_text_2=gr.TextArea(label="Prompt #2", interactive=True)
+                    scene_audio_2=gr.Audio(type="filepath", interactive=False)
+                    scene_audio_2_dropdown=gr.Dropdown(label="Audio #2")
+            with gr.Column(scale=1):
+                with gr.Group():
+                    scene_image_3=gr.Image(label="Scene #3", type="filepath")
+                    scene_text_3=gr.TextArea(label="Prompt #3", interactive=True)
+                    scene_audio_3=gr.Audio(type="filepath", interactive=False)
+                    scene_audio_3_dropdown=gr.Dropdown(label="Audio #3")
+        with gr.Row():
+            with gr.Column(scale=1):
+                with gr.Group():
+                    scene_image_4=gr.Image(label="Scene #4", type="filepath")
+                    scene_text_4=gr.TextArea(label="Prompt #4", interactive=True)
+                    scene_audio_4=gr.Audio(type="filepath", interactive=False)
+                    scene_audio_4_dropdown=gr.Dropdown(label="Audio #4")
+            with gr.Column(scale=1):
+                with gr.Group():
+                    scene_image_5=gr.Image(label="Scene #5", type="filepath")
+                    scene_text_5=gr.TextArea(label="Prompt #5", interactive=True)
+                    scene_audio_5=gr.Audio(type="filepath", interactive=False)
+                    scene_audio_5_dropdown=gr.Dropdown(label="Audio #5")
+            with gr.Column(scale=1):
+                with gr.Group():
+                    scene_image_6=gr.Image(label="Scene #6", type="filepath")
+                    scene_text_6=gr.TextArea(label="Prompt #6", interactive=True)
+                    scene_audio_6=gr.Audio(type="filepath", interactive=False)
+                    scene_audio_6_dropdown=gr.Dropdown(label="Audio #6")
         with gr.Row():
             btn_generate_videos = gr.Button("Generate videos")
             btn_generate_audios = gr.Button("Generate audios(Optional)")
             btn_merge_audios = gr.Button("Merge audios(Optional)")
-
-    with gr.Tab("4. Short ingredients >>"):
- 
         with gr.Row():
-            short_ingredients=gr.Gallery(label="Generated videos", type="filepath", show_label=False, elem_id="gallery", columns=[3], rows=[4], object_fit="contain", height="auto")
+            generated_videos = gr.Gallery(label="Generated videos", type="filepath", show_label=False, elem_id="gallery", columns=[3], rows=[2], object_fit="contain", height="auto")
         with gr.Row():
             btn_merge_videos = gr.Button("Merge videos")
             btn_merge_videos_with_audios = gr.Button("Merge videos with audios")
-
-    with gr.Tab("5. BigThing @"):
         with gr.Row():
             merged_video = gr.Video(label="Merged video", show_label=False, elem_id="video", height="auto")
+    with gr.Tab("History >>"):
+        with gr.Row():
+            gr.TextArea()
     
-    # Load the existed images and prompts if any
-    demo.load(show_images_and_prompts, inputs=[sl_number_of_scenes], outputs=scene_images + scene_texts)
-    demo.load(show_generated_videos, inputs=None, outputs=[short_ingredients])
-    demo.load(show_generated_audios, inputs=None, outputs=scene_audios_dropdown)
-    demo.load(show_merged_videos, inputs=None, outputs=[merged_video])
+    demo.load(show_images_n_prompts, inputs=None, outputs=[scene_image_1, scene_image_2, scene_image_3, scene_image_4, scene_image_5, scene_image_6, scene_text_1, scene_text_2, scene_text_3, scene_text_4, scene_text_5, scene_text_6])
+    demo.load(show_generated_videos, inputs=None, outputs=[generated_videos])
+    demo.load(show_generated_audios, inputs=None, outputs=[scene_audio_1_dropdown, scene_audio_2_dropdown, scene_audio_3_dropdown, scene_audio_4_dropdown, scene_audio_5_dropdown, scene_audio_6_dropdown])
 
     step1 = btn_developing.click(develope_story, 
             inputs=[ta_characters, ta_setting, ta_plot, sl_number_of_scenes, sl_duration_per_scene, dd_style], 
             outputs=[tb_developed_story])
-    step1.then(show_images_and_prompts, inputs=[sl_number_of_scenes], outputs=scene_images + scene_texts)
+    step1.then(show_images_n_prompts, inputs=None, outputs=[scene_image_1, scene_image_2, scene_image_3, scene_image_4, scene_image_5, scene_image_6, scene_text_1, scene_text_2, scene_text_3, scene_text_4, scene_text_5, scene_text_6])
 
-    btn_generate_videos.click(generate_video, inputs=[veo_model_id, cb_generate_audio], outputs=[short_ingredients])
-    btn_generate_audios.click(generate_audio, inputs=None, outputs=scene_audios_dropdown)
+    btn_generate_videos.click(generate_video, inputs=None, outputs=[generated_videos])
+    btn_generate_audios.click(generate_audio, inputs=None, outputs=[scene_audio_1_dropdown, scene_audio_2_dropdown, scene_audio_3_dropdown, scene_audio_4_dropdown, scene_audio_5_dropdown, scene_audio_6_dropdown])
     btn_merge_audios.click(merge_audios, inputs=None, outputs=None)
     btn_merge_videos.click(merge_videos_moviepy, inputs=None, outputs=[merged_video])
 
     btn_generate_story.click(generate_story, inputs=[ta_idea], outputs=[ta_characters, ta_setting, ta_plot])
 
-    # scene_audio_1_dropdown.change(play_audio, inputs=[scene_audio_1_dropdown], outputs=[scene_audio_1])
-    # scene_audio_2_dropdown.change(play_audio, inputs=[scene_audio_2_dropdown], outputs=[scene_audio_2])
-    # scene_audio_3_dropdown.change(play_audio, inputs=[scene_audio_3_dropdown], outputs=[scene_audio_3])
-    # scene_audio_4_dropdown.change(play_audio, inputs=[scene_audio_4_dropdown], outputs=[scene_audio_4])
-    # scene_audio_5_dropdown.change(play_audio, inputs=[scene_audio_5_dropdown], outputs=[scene_audio_5])
-    # scene_audio_6_dropdown.change(play_audio, inputs=[scene_audio_6_dropdown], outputs=[scene_audio_6])
+    scene_audio_1_dropdown.change(play_audio, inputs=[scene_audio_1_dropdown], outputs=[scene_audio_1])
+    scene_audio_2_dropdown.change(play_audio, inputs=[scene_audio_2_dropdown], outputs=[scene_audio_2])
+    scene_audio_3_dropdown.change(play_audio, inputs=[scene_audio_3_dropdown], outputs=[scene_audio_3])
+    scene_audio_4_dropdown.change(play_audio, inputs=[scene_audio_4_dropdown], outputs=[scene_audio_4])
+    scene_audio_5_dropdown.change(play_audio, inputs=[scene_audio_5_dropdown], outputs=[scene_audio_5])
+    scene_audio_6_dropdown.change(play_audio, inputs=[scene_audio_6_dropdown], outputs=[scene_audio_6])
     
 if __name__ == "__main__":
     demo.launch(server_name="0.0.0.0", server_port=8000)
