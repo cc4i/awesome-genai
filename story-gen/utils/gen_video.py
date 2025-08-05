@@ -407,14 +407,15 @@ def upload_local_file_to_gcs(bucket_name: str, sub_folder: str, local_file_path:
         logger.error(f"Error uploading file: {str(e)}")
         raise StorageError(f"Failed to upload file to GCS: {str(e)}")
 
-def download_videos(op: Dict[str, Any], whoami: str, loop_seamless: bool) -> List[str]:
+def download_videos(op: Dict[str, Any], whoami: str, seqence: str, loop_seamless: bool) -> List[str]:
     """
     Downloads generated videos from GCS to local storage.
 
     Args:
         op: Operation response containing video information
         whoami: User identifier for local storage path
-
+        seqence: Sequence number of the video
+        loop_seamless: Whether to loop the video seamlessly
     Returns:
         List of local file paths for downloaded videos
 
@@ -438,8 +439,8 @@ def download_videos(op: Dict[str, Any], whoami: str, loop_seamless: bool) -> Lis
                 logger.info(f"op['response']['videos']: {op['response']['videos']}")
                 for video in op["response"]["videos"]:
                     gcs_uri = video["gcsUri"]
-                    file_name = f"{local_path}/{str(uuid.uuid4())}-" + gcs_uri.split("/")[-1]
-                    file_name_loop_seamless = f"{local_path}/{str(uuid.uuid4())}-loop_seamless-" + gcs_uri.split("/")[-1]
+                    file_name = f"{local_path}/{seqence}-{str(uuid.uuid4())}-" + gcs_uri.split("/")[-1]
+                    file_name_loop_seamless = f"{local_path}/{seqence}-{str(uuid.uuid4())}-loop_seamless-" + gcs_uri.split("/")[-1]
                     try:
                         copy_gcs_file_to_local(gcs_uri, file_name)
                         

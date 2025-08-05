@@ -13,7 +13,7 @@ from io import BytesIO
 from utils.gen_video import upload_image, image_to_video, download_videos
 from utils.ce_audio import generate_audio_by_gemini, choose_random_voice
 from models.config import VEO_STORAGE_BUCKET
-from prompt_templates import generate_story_prompt, develop_story_prompt
+from utils.prompt_templates import generate_story_prompt, develop_story_prompt
 from utils.video_ts import merge_videos_moviepy, merge_audio_at_time
 
 
@@ -40,8 +40,8 @@ def generate_video(chosen_veo_model_id, is_generate_audio):
     for file in os.listdir("tmp/images/default"):
         if file.startswith("scene_") and file.endswith(".png"):
             image_path = f"tmp/images/default/{file}"
-            order = file.split('.')[0].split('_')[1]
-            video_prompt_path = f"tmp/images/default/scene_prompt_{order}.txt"
+            seqence = file.split('.')[0].split('_')[1]
+            video_prompt_path = f"tmp/images/default/scene_prompt_{seqence}.txt"
             video_prompt = open(video_prompt_path, "r").read()
             print(f"image_path: {image_path}")
             print(f"video_prompt: {video_prompt}")
@@ -64,7 +64,7 @@ def generate_video(chosen_veo_model_id, is_generate_audio):
                 generate_audio=is_generate_audio,
                 resolution="1080p"
             )
-            files = download_videos(op, "default", False)
+            files = download_videos(op, "default", seqence, False)
             all_files.extend(files)
     all_files.sort()
     return all_files
@@ -374,7 +374,7 @@ with gr.Blocks(theme=gr.themes.Glass(), title="Story GeN/Video ") as demo:
         with gr.Row():
             veo_model_id = gr.Radio(
                 label="Model for generating videos",
-                choices=["veo-2.0-generate-001", "veo-3.0-generate-preview", "veo-3.0-fast-generate-preview"],
+                choices=["veo-2.0-generate-001", "veo-3.0-generate-001", "veo-3.0-generate-preview", "veo-3.0-fast-generate-preview"],
                 value="veo-3.0-generate-preview",
                 interactive=True
             )
