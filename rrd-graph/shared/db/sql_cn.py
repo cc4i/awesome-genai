@@ -23,7 +23,7 @@ class SqlCN():
 
         # All variables
         project_id = os.getenv("PROJECT_ID", "multi-gke-ops")
-        location = os.getenv("LOCATION", "us-central1")
+        location = os.getenv("LOCATION", "asia-southeast1")
         cluster_id = os.getenv("CLUSTER_ID", "rrd-all-in-one")
         instance_id = os.getenv("INSTANCE_ID", "rrd-all-in-one-primary")
         user = os.getenv("DB_USER")
@@ -62,7 +62,7 @@ class SqlCN():
         refresh_strategy: str = "background",
     ) -> tuple[sqlalchemy.engine.Engine, Connector]:
         
-        db_secret = os.getenv("DB_SECRET")
+        db_secret = os.getenv("DB_SECRET1")
         connector = Connector(credentials=self.credentials, refresh_strategy=refresh_strategy)
 
         def getconn() -> pg8000.dbapi.Connection:

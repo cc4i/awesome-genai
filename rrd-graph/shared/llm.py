@@ -35,7 +35,7 @@ def init_model(project_id:str, location:str, model_id:str):
             }
 
         )
-    elif model_id.startswith("gemini") and os.getenv("GOOGLE_GENERATIVEAI_API_KEY") is None:
+    elif model_id.startswith("gemini") and os.getenv("GOOGLE_API_KEY") is None:
         # VertexAI Gemini
         vertexai.init(project=project_id, location=location)
         llm = ChatVertexAI(
@@ -50,8 +50,8 @@ def init_model(project_id:str, location:str, model_id:str):
             )
     else:
         # GoogleGenerativeAI
-        if os.getenv("GOOGLE_GENERATIVEAI_API_KEY") is not None:
-            llm = ChatGoogleGenerativeAI(model=model_id, google_api_key=os.getenv("GOOGLE_GENERATIVEAI_API_KEY"), temperature=1)
+        if os.getenv("GOOGLE_API_KEY") is not None:
+            llm = ChatGoogleGenerativeAI(model=model_id, google_api_key=os.getenv("GOOGLE_API_KEY"), temperature=1)
         else:
             llm=None
     print(f"llm > {llm}")
