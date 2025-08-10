@@ -8,12 +8,16 @@ build:
   - image: asia-southeast1-docker.pkg.dev/multi-gke-ops/gke-repo/loadgen-job
     docker:
       dockerfile: Dockerfile.loadgen
+  - image: asia-southeast1-docker.pkg.dev/multi-gke-ops/gke-repo/console-service
+    docker:
+      dockerfile: Dockerfile.console
 
 manifests:
   kustomize:
     paths:
       - apps/analysis/resources
       - apps/loadgen/resources
+      - apps/console/resources
 
 deploy:
   cloudrun:
@@ -51,6 +55,21 @@ profiles:
     kustomize:
       paths:
         - apps/loadgen/resources
+  deploy:
+    cloudrun:
+      projectid: multi-gke-ops
+      region: us-central1
+
+- name: console
+  build:
+    artifacts:
+    - image: asia-southeast1-docker.pkg.dev/multi-gke-ops/gke-repo/console-service
+      docker:
+        dockerfile: Dockerfile.console
+  manifests:
+    kustomize:
+      paths:
+        - apps/console/resources
   deploy:
     cloudrun:
       projectid: multi-gke-ops

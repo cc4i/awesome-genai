@@ -12,9 +12,8 @@ RUN apt-get update && apt-get install -y \
 COPY apps/loadgen/requirements.txt .
 RUN pip install --no-cache-dir --user -r requirements.txt
 
-# Copy and install the local rrd_shared package
+# Copy the local rrd_shared package
 COPY libs/rrd_shared ./libs/rrd_shared
-RUN pip install --no-cache-dir --user -e ./libs/rrd_shared
 
 # Runtime stage
 FROM python:3.13-slim
@@ -24,8 +23,8 @@ WORKDIR /app
 # Copy Python packages from builder stage
 COPY --from=builder /root/.local /root/.local
 
-# Copy the rrd_shared library to ensure it's available
-COPY --from=builder /app/libs/rrd_shared ./libs/rrd_shared
+# Copy the rrd_shared library directly
+COPY libs/rrd_shared ./libs/rrd_shared
 
 # Copy application code
 COPY apps/loadgen/ .
@@ -34,6 +33,8 @@ COPY apps/loadgen/ .
 ENV PATH=/root/.local/bin:$PATH
 ENV PYTHONPATH=/app:/app/libs:$PYTHONPATH
 
-# Loadgen is a batch job, not a web service, so no port exposure needed
-# Set the command to align with Procfile: web: python3 main.py
-CMD ["python3", "main.py"]
+# Expose port
+EXPOSE 8000
+
+# Set the command to run the loadgen job
+CMD ["python", "main.py"]

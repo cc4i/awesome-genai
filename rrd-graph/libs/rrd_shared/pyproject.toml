@@ -1,6 +1,11 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "rrd-shared"
 version = "0.1.0"
+description = "RRD Shared Library"
 requires-python = ">=3.13"
 dependencies = [
     "dotenv>=0.9.9",
@@ -12,6 +17,13 @@ dependencies = [
     "sqlalchemy>=2.0.42",
     "pytz",
 ]
+
+[tool.setuptools]
+packages = ["rrd_shared", "rrd_shared.db"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+"*" = ["*.sql"]
 
 
 

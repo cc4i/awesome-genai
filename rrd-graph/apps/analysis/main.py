@@ -36,6 +36,10 @@ except ImportError:
 
 # Load environment variables
 load_dotenv()
+project_id = os.getenv("PROJECT_ID")
+cr_location = os.getenv("CR_LOCATION")
+model_id = os.getenv("MODEL_ID")
+model_location = os.getenv("MODEL_LOCATION")
 
 # FastAPI 
 fapp = FastAPI()
@@ -71,7 +75,7 @@ def append_line_to_gcs_file(bucket_name, blob_name, new_line):
         new_line: The line to append to the file.
     """
     try:
-        storage_client = storage.Client()
+        storage_client = storage.Client(project=project_id)
         bucket = storage_client.bucket(bucket_name)
         blob = bucket.blob(blob_name)
         # Download the file
