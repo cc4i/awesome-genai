@@ -1,0 +1,41 @@
+[project]
+name = "rrd-graph"
+version = "0.1.0"
+requires-python = ">=3.13"
+
+dependencies = [
+    "rrd-shared",
+    "dotenv>=0.9.9",
+    "fastapi>=0.116.1",
+    "google-cloud-alloydb-connector>=1.9.0",
+    "google-cloud-run>=0.10.0,<0.11.0",
+    "google-cloud-storage<3.0.0",
+    "gradio>=5.41.1",
+    "langchain-google-genai>=2.1.9",
+    "langchain-google-vertexai>=2.0.28",
+    "pg8000>=1.31.4",
+    "sqlalchemy>=2.0.42",
+    "uvicorn>=0.35.0",
+    "google-cloud-language>=2.17.2",
+    "protobuf>=4.25.0,<5.0.0",
+]
+
+[workspace]
+members = [
+	"libs/rrd_shared",
+	"apps/loadgen",
+    "apps/console",
+    "apps/analysis",
+    "apps/scraping-job",
+]
+
+[tool.uv.sources]
+rrd-shared = { path = "libs/rrd_shared" }
+
+[tool.uv.workspace]
+members = [
+    "apps/analysis",
+    "apps/scraping-job",
+    "apps/nexus",
+]
+

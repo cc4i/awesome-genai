@@ -1,3 +1,0 @@
-cp -r ../shared .
-skaffold run
-rm -rf ./shared

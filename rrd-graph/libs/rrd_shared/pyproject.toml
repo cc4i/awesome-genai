@@ -1,0 +1,17 @@
+[project]
+name = "rrd-shared"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "dotenv>=0.9.9",
+    "google-cloud-alloydb-connector>=1.9.0",
+    "google-cloud-run>=0.10.19",
+    "langchain-google-genai>=2.1.9",
+    "langchain-google-vertexai>=2.0.28",
+    "pg8000>=1.31.4",
+    "sqlalchemy>=2.0.42",
+    "pytz",
+]
+
+
+

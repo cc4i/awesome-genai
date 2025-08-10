@@ -1,0 +1,7 @@
+# Dependencies aligned with pyproject.toml
+requests>=2.32.3
+uvicorn>=0.30.1
+fastapi>=0.115.0
+google-cloud-run>=0.10.19
+google-cloud-scheduler>=2.13.5
+pydantic>=2.0.0

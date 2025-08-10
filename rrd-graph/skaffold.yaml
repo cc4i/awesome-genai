@@ -1,0 +1,57 @@
+apiVersion: skaffold/v4beta11
+kind: Config
+build:
+  artifacts:
+  - image: asia-southeast1-docker.pkg.dev/multi-gke-ops/gke-repo/analysis-service
+    docker:
+      dockerfile: Dockerfile.analysis
+  - image: asia-southeast1-docker.pkg.dev/multi-gke-ops/gke-repo/loadgen-job
+    docker:
+      dockerfile: Dockerfile.loadgen
+
+manifests:
+  kustomize:
+    paths:
+      - apps/analysis/resources
+      - apps/loadgen/resources
+
+deploy:
+  cloudrun:
+    projectid: multi-gke-ops
+    region: us-central1
+
+profiles:
+- name: gcb
+  build:
+    googleCloudBuild: {}
+
+# Individual service profiles for building one by one
+- name: analysis
+  build:
+    artifacts:
+    - image: asia-southeast1-docker.pkg.dev/multi-gke-ops/gke-repo/analysis-service
+      docker:
+        dockerfile: Dockerfile.analysis
+  manifests:
+    kustomize:
+      paths:
+        - apps/analysis/resources
+  deploy:
+    cloudrun:
+      projectid: multi-gke-ops
+      region: us-central1
+
+- name: loadgen
+  build:
+    artifacts:
+    - image: asia-southeast1-docker.pkg.dev/multi-gke-ops/gke-repo/loadgen-job
+      docker:
+        dockerfile: Dockerfile.loadgen
+  manifests:
+    kustomize:
+      paths:
+        - apps/loadgen/resources
+  deploy:
+    cloudrun:
+      projectid: multi-gke-ops
+      region: us-central1

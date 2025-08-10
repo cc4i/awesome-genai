@@ -1,0 +1,12 @@
+# Dependencies aligned with pyproject.toml
+dotenv>=0.9.9
+fastapi>=0.116.1
+google-cloud-alloydb-connector>=1.9.0
+google-cloud-run>=0.10.19
+google-cloud-storage<3.0.0
+gradio>=5.41.1
+langchain-google-genai>=2.1.9
+langchain-google-vertexai>=2.0.28
+pg8000>=1.31.4
+sqlalchemy>=2.0.42
+uvicorn>=0.35.0
