@@ -56,11 +56,37 @@ Ensure your service account has the following roles:
 
 ```bash
 # Install dependencies
-pip install -r requirements.txt
-
-# Or using uv
 uv sync
 ```
+
+## Build Context
+
+**Important**: Docker images must be built from the parent directory (`rrd-graph/`) because:
+
+- The `rrd_shared` library is located in `libs/rrd_shared/`
+- Dockerfiles reference shared dependencies and libraries
+- Skaffold configuration is defined at the parent level
+- All services share common build context and dependencies
+
+**Correct directory structure for builds:**
+```
+rrd-graph/                    ← Build from here
+├── Dockerfile.console        ← Console service Dockerfile
+├── libs/rrd_shared/         ← Shared library
+├── apps/console/            ← Console service code
+└── skaffold.yaml           ← Skaffold configuration
+```
+
+## Updating rrd_shared Library
+
+If you make changes to the `rrd_shared` library, update it using `uv`:
+
+```bash
+# From rrd-graph/ directory
+uv sync --reinstall
+```
+
+This rebuilds and reinstalls the shared library with your changes.
 
 ## Running the Service
 
@@ -77,7 +103,10 @@ uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ### Using Docker
 
 ```bash
-# Build the image
+# Navigate to the parent directory (rrd-graph)
+cd ../..
+
+# Build the image from parent directory
 docker build -f Dockerfile.console -t console-service .
 
 # Run the container
@@ -87,11 +116,17 @@ docker run -p 8000:8000 console-service
 ### Using Skaffold
 
 ```bash
+# Navigate to the parent directory (rrd-graph)
+cd ../..
+
 # Build and deploy
 skaffold run --profile console
 
 # Build only
 skaffold build --profile console
+
+# Deploy only (if images are already built)
+skaffold deploy --profile console
 ```
 
 ## API Endpoints
@@ -131,6 +166,30 @@ gcloud logging read "resource.type=cloud_run_revision AND resource.labels.servic
 1. Follow the project's coding standards
 2. Test your changes thoroughly
 3. Update this README if adding new features or configuration options
+
+## Quick Reference
+
+### Common Commands
+
+```bash
+# From apps/console/ directory
+cd ../..  # Go to rrd-graph parent directory
+
+# Build and deploy with Skaffold
+skaffold run --profile console
+
+# Build only
+skaffold build --profile console
+
+# Deploy only
+skaffold deploy --profile console
+
+# Build Docker image manually
+docker build -f Dockerfile.console -t console-service .
+
+# Run locally
+python apps/console/main.py
+```
 
 ## Support
 

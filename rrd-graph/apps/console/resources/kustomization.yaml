@@ -7,8 +7,8 @@ resources:
 - console-service.yaml
 
 images:
-- name: "rrd-console"
-  newName: asia-southeast1-docker.pkg.dev/multi-gke-ops/gke-repo/console
+- name: "console-service"
+  newName: asia-southeast1-docker.pkg.dev/multi-gke-ops/gke-repo/console-service
   newTag: latest
 
 patches:

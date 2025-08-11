@@ -21,13 +21,18 @@ patches:
     - op: add
       path: "/spec/template/spec/template/spec/containers/0/env/-"
       value:
-        name: LOCATION
-        value: "us-central1"
+        name: CR_LOCATION
+        value: "asia-southeast1"
     - op: add
       path: "/spec/template/spec/template/spec/containers/0/env/-"
       value:
         name: MODEL_ID
-        value: "gemini-1.5-pro-002"
+        value: "gemini-2.5-flash"
+    - op: add
+      path: "/spec/template/spec/template/spec/containers/0/env/-"
+      value:
+        name: MODEL_LOCATION
+        value: "global"
     - op: add
       path: "/spec/template/spec/template/spec/containers/0/env/-"
       value:

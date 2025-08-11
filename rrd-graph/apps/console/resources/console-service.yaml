@@ -1,7 +1,7 @@
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
-  name: rrd-console
+  name: console-service
   annotations:
     run.googleapis.com/ingress: all
 spec:
@@ -17,13 +17,13 @@ spec:
       containerConcurrency: 1
       timeoutSeconds: 300
       containers:
-      - name: rrd-console
-        image: rrd-console
+      - name: console-service
+        image: console-service
         env:
           # - name: TZ
           #   value: "Asia/Singapore"
           - name: APP_NAME
-            value: "rrd-console"
+            value: "console-service"
           - name: DB_PASS
             valueFrom:
               secretKeyRef:
