@@ -15,12 +15,12 @@ class Sentiment():
 
 
 
-    def upload_to_bucket(self, blob_name, file, gcs_bucket):
+    def upload_to_bucket(self, project_id, blob_name, file, gcs_bucket):
         """ 
         Upload a file to the given Google Cloud Storage bucket.
         """
 
-        client = storage.Client()
+        client = storage.Client(project=project_id)
         bucket = client.bucket(gcs_bucket)
         blob = bucket.blob(blob_name)
         blob.upload_from_filename(f"/tmp/{file}")
@@ -33,14 +33,13 @@ class Sentiment():
         return {"batch_id": batch_id, "data": self.sqlcn.posts.latest_100_posts(thread_id)}
 
 
-    def propagate_prompt_gcs(self, project_id, location, thread_id, analysis_gcs_bucket, input_file):
+    def propagate_prompt_gcs(self, project_id, thread_id, analysis_gcs_bucket, input_file):
         """
         Propagate the prompt to GCS for batch prediction.
         """
 
         print(f"""
             project_id: {project_id}, 
-            location: {location}, 
             thread_id: {thread_id},
             analysis_gcs_bucket: {analysis_gcs_bucket},
             input_file: {input_file}
@@ -169,12 +168,12 @@ class Sentiment():
             print(f"Job failed: {job.error}")
 
 
-    def read_analysis_response(self, gcs_bucket, blob_name, nlp=None):
+    def read_analysis_response(self, project_id, gcs_bucket, blob_name, nlp=None):
         """
         Read the analysis response from GCS.
         """
 
-        client = storage.Client()
+        client = storage.Client(project=project_id)
         bucket = client.bucket(gcs_bucket)
         blob = bucket.blob(blob_name)
         print(f"nlp={nlp}")

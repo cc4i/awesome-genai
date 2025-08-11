@@ -37,9 +37,6 @@ except ImportError:
 # Load environment variables
 load_dotenv()
 project_id = os.getenv("PROJECT_ID")
-cr_location = os.getenv("CR_LOCATION")
-model_id = os.getenv("MODEL_ID")
-model_location = os.getenv("MODEL_LOCATION")
 
 # FastAPI 
 fapp = FastAPI()
@@ -56,12 +53,15 @@ def trigger_analysis(project_id, location, thread_id, service_name="analysis-ser
         s_url="http://localhost:8000"
     print(f"service_url: {s_url}")
     try:
-        if nlp == "nlp":
-            print(f"Trigger analysis {s_url}/nlp-analysis/{thread_id} again...")
-            requests.get(f"{s_url}/nlp-analysis/{thread_id}", timeout=2)
+        if s_url.startswith("http://localhost") or s_url.startswith("http://127.0.0.1"):
+            pass
         else:
-            print(f"Trigger analysis {s_url}/analysis/{thread_id} again...")
-            requests.get(f"{s_url}/analysis/{thread_id}", timeout=2)
+            if nlp == "nlp":
+                print(f"Trigger analysis {s_url}/nlp-analysis/{thread_id} again...")
+                requests.get(f"{s_url}/nlp-analysis/{thread_id}", timeout=2)
+            else:
+                print(f"Trigger analysis {s_url}/analysis/{thread_id} again...")
+                requests.get(f"{s_url}/analysis/{thread_id}", timeout=2)
     except requests.exceptions.ReadTimeout: 
         pass
 
@@ -108,7 +108,9 @@ def nlp_analyze_sentiment(thread_id):
     if results is not None and len(results.get("data"))>0:
         rows = results.get("data")
         batch_id = results.get("batch_id")
-        ls_client = language_v2.LanguageServiceClient()
+        ls_client = language_v2.LanguageServiceClient(
+            client_options={"quota_project_id": project_id}
+        )
         # Available types: PLAIN_TEXT, HTML
         document_type_in_plain_text = language_v2.Document.Type.PLAIN_TEXT
         # Optional. If not specified, the language is automatically detected.
@@ -135,7 +137,7 @@ def nlp_analyze_sentiment(thread_id):
                     print(f"Ignored this row due to error!!! post_id:{row.post_id} in batch_id:{batch_id}")
                     continue
 
-                print(f"Language of the text: {response.language_code}")
+                print(f"Language of the text: {response.language_code}, score: {response.document_sentiment.score}, magnitude: {response.document_sentiment.magnitude}")
                 if response.document_sentiment.score > 0:
                     label ="positive" 
                 elif response.document_sentiment.score == 0:
@@ -158,7 +160,7 @@ def nlp_analyze_sentiment(thread_id):
 
             if len(rows)>0:
                 # Upload the analysis_file into GCS bucket 
-                blob_name = ss.upload_to_bucket(f"processed/{analysis_file}", analysis_file, analysis_gcs_bucket)
+                blob_name = ss.upload_to_bucket(project_id=project_id, blob_name=f"processed/{analysis_file}", file=analysis_file, gcs_bucket=analysis_gcs_bucket)
                 print(f"Uploaded file: {blob_name} with success")
 
 
@@ -167,22 +169,20 @@ def nlp_analyze_sentiment(thread_id):
 def analysis(thread_id: str):
     """
     Main function for batch prediction, which includes the following flows:
-        1. Extract unprocessed rows from BQ and save it into /to_be_process/ folder in GCS.
+        1. Extract unprocessed rows from DB and save it into /to_be_process/ folder in GCS.
         2. Submit a batch predition job for process
         3. Output file will be pushed into /processed/ folder in GCS.
     """
 
     # Get environment variables
     project_id = os.getenv("PROJECT_ID") or "multi-gke-ops"
-    location = os.getenv("LOCATION") or "us-central1"
-    batch_model_id = os.getenv("BATCH_MODEL_ID") or "gemini-1.5-pro-002"
+    batch_model_id = os.getenv("BATCH_MODEL_ID") or "gemini-2.5-flash"
     batch_model_location = os.getenv("BATCH_MODEL_LOCATION") or "us-central1"
     analysis_gcs_bucket = os.getenv("ANALYSIS_GCS_BUCKET") or "rrd-sentiment-analysis-multi-gke-ops"
     input_file=f"{thread_id}-{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}.jsonl"
 
     print(f"""
         project_id: {project_id}, 
-        location: {location}, 
         batch_model_id: {batch_model_id}, 
         thread_id: {thread_id}, 
         analysis_gcs_bucket: {analysis_gcs_bucket}
@@ -192,7 +192,6 @@ def analysis(thread_id: str):
     # initialize_vertexai_client(project_id, location)
 
     records = ss.propagate_prompt_gcs(project_id=project_id, 
-        location=location,
         thread_id=thread_id,
         analysis_gcs_bucket=analysis_gcs_bucket,
         input_file=input_file
@@ -213,7 +212,7 @@ def analysis(thread_id: str):
 @fapp.post("/post-analysis")
 async def post_analysis(request: Request, q: str | None = None):
     """
-    Process the response after prodiction job finished and sync result into buccket. 
+    Process the response after prodiction job finished and sync result into bucket. 
     Automatically trigger by object event, post body should be JSON, for eaxmple:
     ```json
     {
@@ -235,13 +234,13 @@ async def post_analysis(request: Request, q: str | None = None):
 
     # Get environment variables
     project_id = os.getenv("PROJECT_ID") or "multi-gke-ops"
-    location = os.getenv("LOCATION") or "us-central1"
+    cr_location = os.getenv("CR_LOCATION") or "us-central1"
 
     if file_name.startswith("processed"):
         if file_name.startswith("processed/nlp-analysis-"):
-            sents = ss.read_analysis_response(gcs_bucket=bucket_name, blob_name=file_name, nlp=q)
+            sents = ss.read_analysis_response(project_id=project_id, gcs_bucket=bucket_name, blob_name=file_name, nlp=q)
         else:
-            sents = ss.read_analysis_response(gcs_bucket=bucket_name, blob_name=file_name)
+            sents = ss.read_analysis_response(project_id=project_id, gcs_bucket=bucket_name, blob_name=file_name)
         print(sents)
         
         # Save sentiment core, sentiment_magnitude, sentiment_label
@@ -275,11 +274,13 @@ async def post_analysis(request: Request, q: str | None = None):
         
         if len(rows_to_update)>0:
             # Update sentiment results
+            # print(f"rows_to_update: {rows_to_update}")
             print(f"{len(rows_to_update)} rows will be updated.")
             print(f"{len(sqlcn.posts.save_sentiment_results(rows_to_update))} rows have be updated.")
         
             # Get last sentiment level
             s_level, is_new_level = sqlcn.sentiment_summaries.calculate_sentiment_level(thread_id, platform_id)
+            print(f"s_level: {s_level}, is_new_level: {is_new_level}")
             
             if is_new_level:    
                 # Trigger generate playbook when sentiment level changed
@@ -287,14 +288,14 @@ async def post_analysis(request: Request, q: str | None = None):
 
             # Trigger analysis again
             if file_name.startswith("processed/nlp-analysis-"):
-                trigger_analysis(project_id=project_id, location=location, thread_id=thread_id)
+                trigger_analysis(project_id=project_id, location=cr_location, thread_id=thread_id)
             else:
-                trigger_analysis(project_id=project_id, location=location, thread_id=thread_id, nlp=None)
+                trigger_analysis(project_id=project_id, location=cr_location, thread_id=thread_id, nlp=None)
         else:
             print(f"Triggered but nothing processed, recorded  name: {file_name} into unknown-issues.txt.")
             append_line_to_gcs_file(bucket_name=bucket_name, blob_name="unknown-issues.txt", new_line=file_name)
         return {"status": "post-analysis was done"}
-
+ 
 
 
 @fapp.get("/playbook/{thread_id}")

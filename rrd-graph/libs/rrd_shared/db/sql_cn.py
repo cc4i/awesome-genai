@@ -22,9 +22,9 @@ class SqlCN():
         location = os.getenv("LOCATION", "asia-southeast1")
         cluster_id = os.getenv("CLUSTER_ID", "rrd-all-in-one")
         instance_id = os.getenv("INSTANCE_ID", "rrd-all-in-one-primary")
-        user = os.getenv("DB_USER")
+        user = os.getenv("DB_USER", "postgres")
         password = os.getenv("DB_PASS")
-        db = os.getenv("DB_NAME")
+        db = os.getenv("DB_NAME", "postgres")
 
         # Only for local test in LangGraph Studio
         file_path="/deps/__outer_agent/agent/multi-gke-ops-aa82224eed72.json"

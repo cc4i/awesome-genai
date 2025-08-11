@@ -178,8 +178,8 @@ class PlaybookTools():
 
     def   gen_playbook(self, thread_id: str):
         project_id = os.getenv("PROJECT_ID") or "realtime-reputation-defender"
-        location = os.getenv("MODEL_LOCATION") or "us-central1"
-        model_id = os.getenv("MODEL_ID") or "gemini-1.5-pro-002"
+        location = os.getenv("MODEL_LOCATION") or "global"
+        model_id = os.getenv("MODEL_ID") or "gemini-2.5-flash"
 
         # Get request
         try:

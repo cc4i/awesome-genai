@@ -55,7 +55,6 @@ print("Loading environment variables from .env")
 load_dotenv()
 fixed_platforms = ['*', 'twitter', 'google-search', 'google-news' ]
 project_id = os.getenv("PROJECT_ID") or "multi-gke-ops"
-location = os.getenv("LOCATION") or "us-central1"
 policy_bucket = os.getenv("POLICY_BUCKET") or "simulating_policy_bucket-multi-gke-ops"
 policy_running_folder = os.getenv("SIMULATING_POLICY_FOLDER") or "running_polices"
 

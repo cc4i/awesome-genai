@@ -21,28 +21,28 @@ patches:
     - op: add
       path: "/spec/template/spec/containers/0/env/-"
       value:
-        name: LOCATION
+        name: CR_LOCATION
         value: "us-central1"
     - op: add
       path: "/spec/template/spec/containers/0/env/-"
       value:
         name: MODEL_ID
-        value: "claude-3-5-sonnet-v2@20241022"
+        value: "gemini-2.5-flash"
     - op: add
       path: "/spec/template/spec/containers/0/env/-"
       value:
         name: MODEL_LOCATION
-        value: "us-east5"
+        value: "global"
     - op: add
       path: "/spec/template/spec/containers/0/env/-"
       value:
         name: BATCH_MODEL_ID
-        value: "gemini-1.5-pro-002"
+        value: "gemini-2.5-flash"
     - op: add
       path: "/spec/template/spec/containers/0/env/-"
       value:
         name: BATCH_MODEL_LOCATION
-        value: "us-central1"
+        value: "global"
     - op: add
       path: "/spec/template/spec/containers/0/env/-"
       value:

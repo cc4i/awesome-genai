@@ -1,16 +1,22 @@
 apiVersion: skaffold/v4beta11
 kind: Config
 build:
+  platforms:
+    - linux/amd64
+    - linux/arm64
   artifacts:
   - image: asia-southeast1-docker.pkg.dev/multi-gke-ops/gke-repo/analysis-service
     docker:
       dockerfile: Dockerfile.analysis
+
   - image: asia-southeast1-docker.pkg.dev/multi-gke-ops/gke-repo/loadgen-job
     docker:
       dockerfile: Dockerfile.loadgen
+
   - image: asia-southeast1-docker.pkg.dev/multi-gke-ops/gke-repo/console-service
     docker:
       dockerfile: Dockerfile.console
+
 
 manifests:
   kustomize:
@@ -22,16 +28,19 @@ manifests:
 deploy:
   cloudrun:
     projectid: multi-gke-ops
-    region: us-central1
+    region: asia-southeast1
 
 profiles:
 - name: gcb
   build:
     googleCloudBuild: {}
 
-# Individual service profiles for building one by one
+# Individual service profiles for building one by one (all support both architectures)
 - name: analysis
   build:
+    platforms:
+      - linux/amd64
+      - linux/arm64
     artifacts:
     - image: asia-southeast1-docker.pkg.dev/multi-gke-ops/gke-repo/analysis-service
       docker:
@@ -43,10 +52,13 @@ profiles:
   deploy:
     cloudrun:
       projectid: multi-gke-ops
-      region: us-central1
+      region: asia-southeast1
 
 - name: loadgen
   build:
+    platforms:
+      - linux/amd64
+      - linux/arm64
     artifacts:
     - image: asia-southeast1-docker.pkg.dev/multi-gke-ops/gke-repo/loadgen-job
       docker:
@@ -58,7 +70,7 @@ profiles:
   deploy:
     cloudrun:
       projectid: multi-gke-ops
-      region: us-central1
+      region: asia-southeast1
 
 - name: console
   build:
@@ -73,4 +85,6 @@ profiles:
   deploy:
     cloudrun:
       projectid: multi-gke-ops
-      region: us-central1
+      region: asia-southeast1
+
+
