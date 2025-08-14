@@ -105,3 +105,5 @@ cr.yaml
 release/
 
 .langgraph_api
+.requirements.txt
+deployment_metadata.json

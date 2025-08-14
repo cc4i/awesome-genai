@@ -2,13 +2,14 @@
 install:
 	@command -v uv >/dev/null 2>&1 || { echo "uv is not installed. Installing uv..."; curl -LsSf https://astral.sh/uv/0.6.12/install.sh | sh; source $HOME/.local/bin/env; }
 	uv sync --dev --extra jupyter
+# 	uv sync --dev
 
 # Launch local dev playground
 playground:
 	@echo "==============================================================================="
 	@echo "| 🚀 Starting your agent playground...                                        |"
 	@echo "|                                                                             |"
-	@echo "| 🔍 IMPORTANT: Select the 'agents' folder to interact with your agent.          |"
+	@echo "| 🔍 IMPORTANT: Select the 'app' folder to interact with your agent.          |"
 	@echo "==============================================================================="
 	uv run adk web --port 8501
 
@@ -31,7 +32,7 @@ cloud-run-backend:
 agent-engine-backend:
 	# Export dependencies to requirements file using uv export.
 	uv export --no-hashes --no-header --no-dev --no-emit-project --no-annotate --frozen > .requirements.txt 2>/dev/null || \
-	uv export --no-hashes --no-header --no-dev --no-emit-project --frozen > .requirements.txt && uv run agents/agent_engine_app.py
+	uv export --no-hashes --no-header --no-dev --no-emit-project --frozen > .requirements.txt && uv run app/agent_engine_app.py
 
 # Launch local development server with hot-reload
 local-backend:

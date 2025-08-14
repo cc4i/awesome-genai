@@ -122,6 +122,7 @@ export function Prompt() {
 
     setHoverEntered(false);
 
+    console.log("Sending request prompt to GEMINI ...")
     let response = (await client
       .getGenerativeModel(
         {model: modelSelected},
@@ -142,7 +143,8 @@ export function Prompt() {
         ],
         generationConfig: {temperature}
       })).response.text()
-
+    console.log(response)
+    
     if (response.includes("```json")) {
       response = response.split("```json")[1].split("```")[0];
     }

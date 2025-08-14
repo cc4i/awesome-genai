@@ -26,7 +26,10 @@ from app.config import config
 from google.adk.tools import agent_tool
 from google.adk.code_executors import BuiltInCodeExecutor
 
-
+_, project_id = google.auth.default()
+os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
+os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "global")
+os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
 
 coding_agent = Agent(
     model='gemini-2.0-flash',

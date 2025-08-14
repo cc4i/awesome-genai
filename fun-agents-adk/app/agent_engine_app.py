@@ -12,13 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# mypy: disable-error-code="attr-defined"
+# mypy: disable-error-code="attr-defined,arg-type"
 import copy
 import datetime
 import json
 import logging
 import os
-from collections.abc import Mapping, Sequence
 from typing import Any
 
 import google.auth
@@ -56,7 +55,7 @@ class AgentEngineApp(AdkApp):
         feedback_obj = Feedback.model_validate(feedback)
         self.logger.log_struct(feedback_obj.model_dump(), severity="INFO")
 
-    def register_operations(self) -> Mapping[str, Sequence]:
+    def register_operations(self) -> dict[str, list[str]]:
         """Registers the operations of the Agent.
 
         Extends the base operations to include feedback registration functionality.
@@ -68,9 +67,10 @@ class AgentEngineApp(AdkApp):
     def clone(self) -> "AgentEngineApp":
         """Returns a clone of the ADK application."""
         template_attributes = self._tmpl_attrs
+
         return self.__class__(
-            agent=copy.deepcopy(template_attributes.get("agent")),
-            enable_tracing=template_attributes.get("enable_tracing"),
+            agent=copy.deepcopy(template_attributes["agent"]),
+            enable_tracing=bool(template_attributes.get("enable_tracing", False)),
             session_service_builder=template_attributes.get("session_service_builder"),
             artifact_service_builder=template_attributes.get(
                 "artifact_service_builder"
@@ -86,6 +86,7 @@ def deploy_agent_engine_app(
     requirements_file: str = ".requirements.txt",
     extra_packages: list[str] = ["./app"],
     env_vars: dict[str, str] = {},
+    service_account: str | None = None,
 ) -> agent_engines.AgentEngine:
     """Deploy the agent engine app to Vertex AI."""
 
@@ -112,7 +113,7 @@ def deploy_agent_engine_app(
     )
 
     # Set worker parallelism to 1
-    env_vars["NUM_WORKERS"] = "10"
+    env_vars["NUM_WORKERS"] = "1"
 
     # Common configuration for both create and update operations
     agent_config = {
@@ -121,6 +122,7 @@ def deploy_agent_engine_app(
         "description": "A base ReAct agent built with Google's Agent Development Kit (ADK)",
         "extra_packages": extra_packages,
         "env_vars": env_vars,
+        "service_account": service_account,
     }
     logging.info(f"Agent config: {agent_config}")
     agent_config["requirements"] = requirements
@@ -184,6 +186,11 @@ if __name__ == "__main__":
         "--set-env-vars",
         help="Comma-separated list of environment variables in KEY=VALUE format",
     )
+    parser.add_argument(
+        "--service-account",
+        default=None,
+        help="Service account email to use for the agent engine",
+    )
     args = parser.parse_args()
 
     # Parse environment variables if provided
@@ -211,4 +218,5 @@ if __name__ == "__main__":
         requirements_file=args.requirements_file,
         extra_packages=args.extra_packages,
         env_vars=env_vars,
+        service_account=args.service_account,
     )
