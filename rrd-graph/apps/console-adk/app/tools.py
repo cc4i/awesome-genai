@@ -13,72 +13,299 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import sqlalchemy
-from sqlalchemy.ext.asyncio import create_async_engine
 
 
-async def list_alloydb_tables() -> dict:
+
+import sys
+from pathlib import Path
+
+# Add the libs directory to Python path for rrd_shared imports
+libs_path = Path(__file__).parent.parent.parent.parent / "libs"
+sys.path.insert(0, str(libs_path))
+
+
+from dotenv import load_dotenv
+from datetime import datetime, timedelta
+import pytz
+# import pandas as pd
+from rrd_shared.db.sql_cn import SqlCN
+
+from google.genai import Client
+from google.adk.tools.tool_context import ToolContext
+from google.genai import types
+
+# All envariables
+load_dotenv()
+
+# Db
+sqlcn = SqlCN()
+
+def thread_id_by(ctx:str) -> str:
     """
-    Lists all tables in the AlloyDB database.
+    Based on context provide to extract the most likely thread id for further process.
+    Args:
+        ctx: The context related to the thread.
 
     Returns:
-        A dictionary containing a list of table names.
+         A thread id.
     """
-    try:
-        engine = create_async_engine(
-            f"postgresql+asyncpg://{os.environ['ALLOYDB_USER']}:{os.environ['ALLOYDB_PASS']}@{os.environ['ALLOYDB_HOST']}/{os.environ['ALLOYDB_DB']}"
-        )
-        async with engine.connect() as conn:
-            result = await conn.execute(sqlalchemy.text("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname != 'pg_catalog' AND schemaname != 'information_schema';"))
-            tables = [row[0] for row in result]
-            return {"tables": tables}
-    except Exception as e:
-        return {"error": str(e)}
+    # all_threads = sqlcn.threads.list_threads()
+    thread_id="1"
+    return thread_id
 
 
-async def get_alloydb_table_schema(table_name: str) -> dict:
+def last_sentiment_distribution_by(thread_id:str, platform_id:str, duration:str) -> dict:
     """
-    Gets the schema of a specific table in the AlloyDB database.
+    List all sentiment distrubution data.
 
     Args:
-        table_name: The name of the table.
+        thread_id: The Id of Thread.
+        platform_id: The name of source platform, one of value from ['twitter', 'google-search', 'google-news', 'instagram']
+        duration: The time range from the past to the present, the available ranges are: 
+            - 1h (from 1 hour ago to now)
+            - 24h (from 24 hours ago to now)
+            - 7d (from 7 days ago to now )
+            - 30d (from 30 days ago to now)
 
     Returns:
-        A dictionary containing the table schema.
+         A dictionary containing the distrubution info as per duration.
     """
-    try:
-        engine = create_async_engine(
-            f"postgresql+asyncpg://{os.environ['ALLOYDB_USER']}:{os.environ['ALLOYDB_PASS']}@{os.environ['ALLOYDB_HOST']}/{os.environ['ALLOYDB_DB']}"
-        )
-        async with engine.connect() as conn:
-            result = await conn.execute(sqlalchemy.text(f"SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '{table_name}';"))
-            schema = {row[0]: row[1] for row in result}
-            return {"schema": schema}
-    except Exception as e:
-        return {"error": str(e)}
+
+    # Find out duration
+    if duration == "1h":
+        h = 1
+    elif duration == "24h":
+        h = 24
+    elif duration == "7d":
+        h = 7*24
+    elif duration == "30d":
+        h = 30*24
+    else:
+        h=24
+    nn= datetime.now()
+    nl = nn - timedelta(hours=h)
+    start = nl.astimezone(pytz.utc).strftime('%Y-%m-%d %H:%M:%S')
+    end = nn.astimezone(pytz.utc).strftime('%Y-%m-%d %H:%M:%S')
+    
+    sd_data = sqlcn.posts.sentiment_distribution_by_time(thread_id=thread_id, platform_id=platform_id, start=start, end=end)
+    counts=[]
+    sentiment_labels=[]
+    platforms=[]
+    if len(sd_data) > 0:
+        for sd in sd_data:
+            counts.append(sd.get("positive"))
+            counts.append(sd.get("neutral"))
+            counts.append(sd.get("negtive"))
+            sentiment_labels.append("positive")
+            sentiment_labels.append("neutral")
+            sentiment_labels.append("negtive")
+            platforms.append(sd.get("platform_id"))
+            platforms.append(sd.get("platform_id"))
+            platforms.append(sd.get("platform_id"))
+        
+        return {
+            "count": counts,
+            "sentiment_label": sentiment_labels,
+            "platform": platforms
+        }
+    else:
+        return {}
 
 
-async def query_alloydb(query: str) -> dict:
+def last_semtiment_score_by(thread_id:str, platform_id:str, duration:str) -> dict:
     """
-    Executes a read-only SQL query against the AlloyDB database.
-    IMPORTANT: This tool is restricted to SELECT statements to ensure data privacy and security.
+    List all posts with source platform, semtiment score and semtiment label
 
     Args:
-        query: The SQL SELECT query to execute.
+        thread_id: The Id of Thread.
+        The name of source platform, one of value from ['twitter', 'google-search', 'google-news', 'instagram'].
+        duration: The time range from the past to the present, the available ranges are: 
+            - 1h (from 1 hour ago to now)
+            - 24h (from 24 hours ago to now)
+            - 7d (from 7 days ago to now )
+            - 30d (from 30 days ago to now)
 
     Returns:
-        A dictionary containing the query results.
+        A dictionary containing a list of post info.
     """
-    if not query.strip().upper().startswith("SELECT"):
-        return {"error": "Only SELECT queries are allowed for security reasons."}
-    try:
-        engine = create_async_engine(
-            f"postgresql+asyncpg://{os.environ['ALLOYDB_USER']}:{os.environ['ALLOYDB_PASS']}@{os.environ['ALLOYDB_HOST']}/{os.environ['ALLOYDB_DB']}"
+
+    # Find out duration
+    if duration == "1h":
+        h = 1
+    elif duration == "24h":
+        h = 24
+    elif duration == "7d":
+        h = 7*24
+    elif duration == "30d":
+        h = 30*24
+    else:
+        h=24
+    nn= datetime.now()
+    nl = nn - timedelta(hours=h)
+    start = nl.astimezone(pytz.utc).strftime('%Y-%m-%d %H:%M:%S')
+    end = nn.astimezone(pytz.utc).strftime('%Y-%m-%d %H:%M:%S')
+
+    return semtiment_score_by(thread_id, platform_id, start, end)
+
+
+def semtiment_score_by(thread_id:str, platform_id:str, start:str, end:str) -> dict:
+    """
+    List all posts with source platform, semtiment score and semtiment label
+
+    Args:
+        thread_id: The Id of Thread.
+        The name of source platform, one of value from ['twitter', 'google-search', 'google-news', 'instagram'].
+        start: Start date of data, format: "%Y-%m-%d %H:%M:%S"
+        end: End date of date, format: "%Y-%m-%d %H:%M:%S"
+
+    Returns:
+        A dictionary containing a list of post info.
+    """
+    posts = sqlcn.posts.semtiment_score_by(thread_id, platform_id, start, end)
+    post_dates=[]
+    sentiment_scores=[]
+    sentiment_labels=[]
+    platforms=[]
+    print(f"posts: {len(posts)}")
+    if len(posts) > 0:
+        for post in posts:
+            # print(post)
+            post_dates.append(post.get("sentiment_at"))
+            sentiment_scores.append(post.get("sentiment_score"))
+            sentiment_labels.append(post.get("sentiment_label"))
+            platforms.append(post.get("platform_id"))
+        
+        print(f"post_dates: {len(post_dates)}" )
+        print(f"sentiment_scores: {len(sentiment_scores)}" )
+        print(f"sentiment_labels: {len(sentiment_labels)}" )
+        print(f"platforms: {len(platforms)}")
+
+        
+        return {
+                "time": post_dates,
+                "sentiment_score": sentiment_scores,
+                "sentiment_labels": sentiment_labels,
+                "platforms": platforms
+            }
+    else:
+        return {}
+
+
+
+def last_top100_worst_posts(thread_id:str) -> list[dict]:
+    """
+    List the top hundred of the most negative posts in all social platforms.
+
+    Args:
+        thread_id: The Id of Thread.
+
+    Returns:
+        A list of posts.
+    """
+    return sqlcn.posts.recent_top100_worst_posts(thread_id)
+
+
+def last_top100_best_posts(thread_id:str) -> list[dict]:
+    """
+    List the top hundred of the most positive posts in all social platforms.
+    Args:
+        thread_id: The Id of Thread.
+
+    Returns:
+        A list of posts.
+    """
+    return sqlcn.posts.recent_top100_best_posts(thread_id)
+
+
+def last_top100_neutral_posts(thread_id:str) -> list[dict]:
+    """
+    List the top hundred of the most neutral posts in all social platforms.
+    Args:
+        thread_id: The Id of Thread.
+
+    Returns:
+        A list of posts.
+    """
+    return sqlcn.posts.recent_top100_neutral_posts(thread_id)
+
+
+def last_sentiment_level(thread_id:str, platform_id:str) -> str:
+    """
+    Get the sentiment level of the thread in specific paltform, which is the average value of all sentiment level in the last 1 hours.
+
+    A sentiment level is calculated base sentiment analysis to each post. Use following formula: 
+                    sentiment_level = (w1 * sentiment_score) + (w2 * sentiment_magnitude), 
+    and then do normalization:
+                    normalized_sentiment = ((sentiment_level - min_sentiment) / (max_sentiment - min_sentiment)) * 100.
+
+    Args:
+        thread_id: The Id of Thread.
+        platform_id: The name of source platform
+
+    Returns:
+        The sentiment level of the thread.
+    """
+    return str(sqlcn.sentiment_summaries.last_sentiment_level(thread_id, platform_id))
+
+
+def last_100_posts(thread_id:str) -> list[dict]:
+    """
+    List the last 100 posts in all social platforms.
+
+    Args:
+        thread_id: The Id of Thread.
+
+    Returns:
+        A list of posts.
+    """
+    return sqlcn.posts.latest_100_posts(thread_id)
+
+
+
+def thread_detail_by(thread_id:str) -> dict:
+    """
+    Get all detail of Thread.
+
+    Args:
+        thread_id: The Id of Thread.
+
+    Returns:
+        A dictionary containing the thread info.
+    """
+    return sqlcn.threads.thread_by_id(thread_id)
+
+
+# Try output images 
+async def generate_image(prompt: str, tool_context: 'ToolContext'):
+    
+  """Generates an image based on the prompt."""
+  client = Client()
+  response = client.models.generate_images(
+      model='imagen-3.0-generate-002',
+      prompt=prompt,
+      config={'number_of_images': 1},
+  )
+  if not response.generated_images:
+    return {'status': 'failed'}
+  image_bytes = response.generated_images[0].image.image_bytes
+#   return types.Part(
+#     inline_data=types.Blob(
+#         mime_type="image/png",
+#         data=image_bytes
+#     )
+#   )
+  await tool_context.save_artifact(
+      'image.png',
+      types.Part.from_bytes(data=image_bytes, mime_type='image/png'),
+  )
+  return {
+      'status': 'success',
+      'detail': 'Image generated successfully and stored in artifacts.',
+      'filename': 'image.png',
+      'part': types.Part(
+            inline_data=types.Blob(
+                mime_type="image/png",
+                data=image_bytes
+            )
         )
-        async with engine.connect() as conn:
-            result = await conn.execute(sqlalchemy.text(query))
-            rows = [list(row) for row in result]
-            return {"result": rows}
-    except Exception as e:
-        return {"error": str(e)}
+  }

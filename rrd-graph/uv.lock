@@ -519,10 +519,13 @@ name = "console-adk"
 version = "0.1.0"
 source = { editable = "apps/console-adk" }
 dependencies = [
+    { name = "dotenv" },
     { name = "google-adk" },
     { name = "google-cloud-aiplatform", extra = ["agent-engines", "evaluation"] },
     { name = "google-cloud-logging" },
     { name = "opentelemetry-exporter-gcp-trace" },
+    { name = "pg8000" },
+    { name = "sqlalchemy" },
 ]
 
 [package.optional-dependencies]
@@ -547,13 +550,16 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "codespell", marker = "extra == 'lint'", specifier = "~=2.2.0" },
+    { name = "dotenv", specifier = ">=0.9.9" },
     { name = "google-adk", specifier = "~=1.8.0" },
     { name = "google-cloud-aiplatform", extras = ["evaluation", "agent-engines"], specifier = "~=1.106.0" },
     { name = "google-cloud-logging", specifier = "~=3.11.4" },
     { name = "jupyter", marker = "extra == 'jupyter'", specifier = "~=1.0.0" },
     { name = "mypy", marker = "extra == 'lint'", specifier = "~=1.15.0" },
     { name = "opentelemetry-exporter-gcp-trace", specifier = "~=1.9.0" },
+    { name = "pg8000", specifier = ">=1.31.4" },
     { name = "ruff", marker = "extra == 'lint'", specifier = ">=0.4.6" },
+    { name = "sqlalchemy", specifier = ">=2.0.42" },
     { name = "types-pyyaml", marker = "extra == 'lint'", specifier = "~=6.0.12.20240917" },
     { name = "types-requests", marker = "extra == 'lint'", specifier = "~=2.32.0.20240914" },
 ]
