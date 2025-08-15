@@ -9,6 +9,7 @@ from utils.auth import get_user, app, greet
 from ui.components import (
     create_video_tab,
     create_image_tab,
+    create_vto_tab,
     create_chat_tab,
     create_checking_tab
 )
@@ -18,6 +19,7 @@ from handlers.media_handlers import (
     upload_image,
     delete_temp_files
 )
+from handlers.vto_handlers import gen_images
 from handlers.chat_handlers import add_message, bot_message
 from utils.gen_video import random_video_prompt, rewrite_video_prompt
 from utils.ce_image import random_image_prompt, rewrite_image_prompt
@@ -54,8 +56,10 @@ with gr.Blocks(theme=gr.themes.Glass(), title="Creative GeN/Studio") as demo:
     # Create tabs
     video_tab, video_components = create_video_tab()
     image_tab, image_components = create_image_tab()
+    vto_tab, vto_components = create_vto_tab()
     chat_tab, chat_components = create_chat_tab()
     checking_tab, checking_components = create_checking_tab()
+
     
     # Extract components
     (
@@ -94,10 +98,13 @@ with gr.Blocks(theme=gr.themes.Glass(), title="Creative GeN/Studio") as demo:
         image_gallery
     ) = image_components
     
+    (input_person_image, input_product_image, di_vto_sample_count, btn_try_on, vto_image_gallery) = vto_components
+
     (cb_output, response_type, mt_input, btn_clear_cov) = chat_components
     (input_checking_image, what_models_see_image) = checking_components
     
     # Set up event handlers
+    # Video Tab
     input_first_image.upload(
         upload_image,
         inputs=[input_first_image, tb_whoami],
@@ -142,6 +149,7 @@ with gr.Blocks(theme=gr.themes.Glass(), title="Creative GeN/Studio") as demo:
         outputs=[tb_prompt_video]
     )
     
+    # Image Tab
     btn_generate_image.click(
         generate_images,
         inputs=[
@@ -165,6 +173,13 @@ with gr.Blocks(theme=gr.themes.Glass(), title="Creative GeN/Studio") as demo:
         rewrite_image_prompt,
         inputs=[tb_prompt_image],
         outputs=[tb_prompt_image]
+    )
+    
+    # VTO Tab
+    btn_try_on.click(
+        gen_images,
+        inputs=[input_person_image, input_product_image, di_vto_sample_count],
+        outputs=[vto_image_gallery]
     )
     
     # Chat functionality

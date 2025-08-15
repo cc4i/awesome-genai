@@ -1,0 +1,21 @@
+[project]
+name = "media-gen"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "authlib>=1.6.1",
+    "fastapi>=0.116.1",
+    "google-auth>=2.40.3",
+    "google-cloud-datastore>=2.21.0",
+    "google-cloud-run>=0.10.19",
+    "google-cloud-storage>=3.3.0",
+    "google-genai>=1.30.0",
+    "gradio>=5.42.0",
+    "itsdangerous>=2.2.0",
+    "pydantic>=2.11.7",
+    "python-dotenv>=1.1.1",
+    "starlette>=0.47.2",
+    "uvicorn>=0.35.0",
+]

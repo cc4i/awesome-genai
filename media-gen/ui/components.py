@@ -285,6 +285,52 @@ def create_image_tab() -> Tuple[gr.Tab, List[Any]]:
     
     return image_tab, components
 
+
+def create_vto_tab() -> Tuple[gr.Tab, List[Any]]:
+    with gr.Tab("Virtual Try-On") as vto_tab:
+        with gr.Row():
+            with gr.Column(scale=1):
+                input_person_image = gr.Image(
+                    label="An image of a person who will try-on a clothing item",
+                    type="filepath",
+                    show_download_button=True,
+                    interactive=True
+                )
+            with gr.Column(scale=1):
+                input_product_image = gr.Image(
+                    label="The clothing item that will be applied onto the image of the person.",
+                    type="filepath",
+                    show_download_button=True,
+                    interactive=True
+                )
+        with gr.Row():
+            di_vto_sample_count = gr.Dropdown(
+                label="Sample count",
+                value=DEFAULT_SAMPLE_COUNT,
+                choices=SAMPLE_COUNTS,
+                interactive=True
+            )
+        with gr.Row():
+            btn_try_on = gr.Button(
+                "Try-Nn",
+                icon="images/gemini-star.png"
+            )
+        with gr.Row():
+            vto_image_gallery = gr.Gallery(
+                label="Generated images",
+                format="png",
+                show_label=False,
+                elem_id="gallery",
+                columns=[3],
+                rows=[2],
+                object_fit="contain",
+                height="auto",
+                preview=True
+            )
+
+    components = [input_person_image, input_product_image, di_vto_sample_count, btn_try_on, vto_image_gallery]
+    return vto_tab, components
+
 def create_chat_tab() -> Tuple[gr.Tab, List[Any]]:
     """
     Create the conversational editing tab.

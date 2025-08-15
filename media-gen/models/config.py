@@ -86,4 +86,5 @@ IMAGE_EXAMPLES: List[str] = [
     "A woman, 35mm portrait, blue and grey duotones.",
     "An expansive mountain range, landscape wide angle 10mm.",
     "An angular sporty electric sedan with skyscrapers in the background.",
+    "A high-resolution, full-body, head-on photograph of a woman standing in a brightly lit professional photography studio wearing a dress. The backdrop is clean gray paper.",
 ] 
