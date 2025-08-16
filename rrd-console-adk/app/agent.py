@@ -23,6 +23,8 @@ from google.adk.tools import google_search
 from app.config import config
 from google.adk.tools import agent_tool
 from google.adk.code_executors import BuiltInCodeExecutor
+from google.adk.planners import BuiltInPlanner
+from google.genai import types as genai_types
 from app.tools import (
     thread_id_by, 
     last_semtiment_score_by, 
@@ -33,7 +35,6 @@ from app.tools import (
     last_top100_neutral_posts,
     last_sentiment_level,
     thread_detail_by,
-    last_100_posts,
     generate_image
 )
 
@@ -42,6 +43,20 @@ _, project_id = google.auth.default()
 os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
 os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "global")
 os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
+
+
+AVAIABLE_TOOLS = [
+    thread_id_by, 
+    last_sentiment_distribution_by, 
+    last_semtiment_score_by, 
+    semtiment_score_by, 
+    last_top100_worst_posts,
+    last_top100_best_posts,
+    last_top100_neutral_posts,
+    last_sentiment_level,
+    thread_detail_by,
+    generate_image
+]
 
 
 sa_execution_pipeline = LlmAgent(
@@ -66,28 +81,21 @@ sa_execution_pipeline = LlmAgent(
     """,
     tools=[
         # agent_tool.AgentTool(agent=google_search), 
-        thread_id_by, 
-        last_sentiment_distribution_by, 
-        last_semtiment_score_by, 
-        semtiment_score_by, 
-        last_top100_worst_posts,
-        last_top100_best_posts,
-        last_top100_neutral_posts,
-        last_sentiment_level,
-        thread_detail_by,
-        last_100_posts,
-        generate_image
-    ],
+    ] + AVAIABLE_TOOLS,
     sub_agents=[],
 )
 
 plan_generator = LlmAgent(
-    model=config.critic_model,
+    model=config.worker_model,
     name="plan_generator",
     description="Generates or refine the existing action-oriented execution plan.",
+    planner=BuiltInPlanner(
+        thinking_config=genai_types.ThinkingConfig(include_thoughts=True)
+    ),
+
     instruction=f"""
     You are a sentiment analysis strategist. Your job is to create a the most comprehensive and high-quality EXECUTION PLAN, not a summary. If there is already a EXECUTION PLAN in the session state,
-    improve upon it based on the user feedback.
+    improve upon it based on the user feedback. Following the instructions restrictedly. 
 
     EXECUTION PLAN(SO FAR):
     {{ execution_plan? }}
@@ -111,22 +119,12 @@ plan_generator = LlmAgent(
     """,
     tools=[
         # agent_tool.AgentTool(agent=google_search), 
-        thread_id_by, 
-        last_sentiment_distribution_by, 
-        last_semtiment_score_by, 
-        semtiment_score_by, 
-        last_top100_worst_posts,
-        last_top100_best_posts,
-        last_top100_neutral_posts,
-        last_sentiment_level,
-        thread_detail_by,
-        last_100_posts,
-        generate_image
-    ],
+    ] + AVAIABLE_TOOLS,
+    output_key="execution_plan",
 )
 
-root_agent = Agent(
-    name="root_agent",
+sentiment_analysis_agent = LlmAgent(
+    name="sentiment_analysis_agent",
     # LiveAPIs: gemini-live-2.5-flash-preview-native-audio
     # gemini-2.5-flash-live-preview
     model=config.worker_model,
@@ -152,4 +150,43 @@ root_agent = Agent(
     tools=[agent_tool.AgentTool(agent=plan_generator)],
     sub_agents=[sa_execution_pipeline],
     output_key="execution_plan",
+)
+
+
+data_extraction_agent = LlmAgent(
+    name="data_extraction_agent",
+    model=config.worker_model,
+   
+    description="Precisely extract data by using all avaiable tools.""",
+    instruction="""
+        You are a data extractor. Your task is to precisely extract data by using all avaiable tools, output as requested format.
+
+        **INSTRUCTION**
+        - Only use tools have been give. 
+        - Think thoroughly to determine right tools. 
+    
+        Current date: {datetime.datetime.now().strftime("%Y-%m-%d")}
+    """,
+    tools=[agent_tool.AgentTool(agent=google_search)] + AVAIABLE_TOOLS,
+)
+
+
+root_agent = Agent(
+    name="root_agent",
+    model=config.worker_model,
+    instruction="""
+        You are a steering agent, your task is to delegate work to the most appropriate specialized agents or tools available to you.
+
+        AVAILABLE SPECIALIZED AGENTS:
+        1. **data_extraction_agent** - Precisely extract data by using all avaiable tools.
+        2. **sentiment_analysis_agent** - Primary Sentiment Analysis assistant.
+    """,
+    # tools=[
+    #     agent_tool.AgentTool(agent=data_extraction_agent),
+    #     agent_tool.AgentTool(agent=sentiment_analysis_agent),
+    # ],
+    sub_agents=[
+        data_extraction_agent,
+        sentiment_analysis_agent,
+    ],
 )

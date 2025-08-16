@@ -27,6 +27,8 @@ members = [
     "apps/console",
     "apps/analysis",
     "apps/scraping-job",
+    "apps/nexus",
+    "apps/console-adk",
 ]
 
 [tool.uv.sources]

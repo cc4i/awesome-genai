@@ -16,19 +16,12 @@
 
 
 
-import sys
-from pathlib import Path
-
-# Add the libs directory to Python path for rrd_shared imports
-libs_path = Path(__file__).parent.parent.parent.parent / "libs"
-sys.path.insert(0, str(libs_path))
-
-
+import os
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 import pytz
 # import pandas as pd
-from rrd_shared.db.sql_cn import SqlCN
+from app.rrd_shared.db.sql_cn import SqlCN
 
 from google.genai import Client
 from google.adk.tools.tool_context import ToolContext
@@ -39,6 +32,12 @@ load_dotenv()
 
 # Db
 sqlcn = SqlCN()
+project_id = os.getenv("PROJECT_ID", "multi-gke-ops")
+model_location = os.getenv("MODEL_LOCATION", "asia-southeast1")
+moded_id = os.getenv("MODEL_ID", "gemini-2.5-flash")
+
+
+
 
 def thread_id_by(ctx:str) -> str:
     """
@@ -49,9 +48,24 @@ def thread_id_by(ctx:str) -> str:
     Returns:
          A thread id.
     """
-    # all_threads = sqlcn.threads.list_threads()
-    thread_id="1"
-    return thread_id
+    all_threads = sqlcn.threads.list_threads()
+    
+    ti_prompt = f"""
+    You are a specialist and find the most possible Thread ID (number) from give threads detail based on context. 
+    ONLY return thread id without any explaination.
+
+    Context: {ctx}
+
+    Threads Detail: {all_threads}
+
+    """
+    print(ti_prompt)
+    client = Client()
+    response = client.models.generate_content(
+        model=moded_id, contents=ti_prompt
+    )
+   
+    return response.text
 
 
 def last_sentiment_distribution_by(thread_id:str, platform_id:str, duration:str) -> dict:
@@ -248,17 +262,7 @@ def last_sentiment_level(thread_id:str, platform_id:str) -> str:
     return str(sqlcn.sentiment_summaries.last_sentiment_level(thread_id, platform_id))
 
 
-def last_100_posts(thread_id:str) -> list[dict]:
-    """
-    List the last 100 posts in all social platforms.
 
-    Args:
-        thread_id: The Id of Thread.
-
-    Returns:
-        A list of posts.
-    """
-    return sqlcn.posts.latest_100_posts(thread_id)
 
 
 
