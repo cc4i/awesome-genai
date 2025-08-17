@@ -74,6 +74,27 @@ class Platform():
             return None
     
 
+    def list_platforms(self)->list[dict]:
+        stmt = (
+            select(self.table)
+        )
+        d_platforms=[]
+        print(stmt)
+        try:
+            with self.engine.connect() as conn:
+                rows = conn.execute(stmt).fetchall()
+                for r in rows:
+                    d_platforms.append(r._asdict())
+                
+        except Exception as e:
+            print(e)
+        finally:
+            print("finally")
+            conn.close()
+            
+        return d_platforms
+
+
     def platform_by_id(self, platform_id:str)->dict:
         stmt = (
             select(self.table)

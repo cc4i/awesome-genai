@@ -17,10 +17,12 @@
 
 
 import os
+import io
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
-import pytz
-# import pandas as pd
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.pyplot as plt
 from app.rrd_shared.db.sql_cn import SqlCN
 
 from google.genai import Client
@@ -37,6 +39,27 @@ model_location = os.getenv("MODEL_LOCATION", "asia-southeast1")
 moded_id = os.getenv("MODEL_ID", "gemini-2.5-flash")
 
 
+def _get_time_range_from_duration(duration: str) -> tuple[str, str]:
+    """
+    Calculates start and end datetime strings from a duration string.
+
+    Args:
+        duration: The time range string (e.g., "1h", "24h", "7d", "30d").
+
+    Returns:
+        A tuple containing the start and end datetime strings in UTC.
+    """
+    duration_map = {
+        "1h": 1,
+        "24h": 24,
+        "7d": 7 * 24,
+        "30d": 30 * 24,
+    }
+    hours = duration_map.get(duration, 24)  # Default to 24h
+    end_dt = datetime.now()
+    start_dt = end_dt - timedelta(hours=hours)
+    date_format = '%Y-%m-%d %H:%M:%S'
+    return start_dt.strftime(date_format), end_dt.strftime(date_format)
 
 
 def thread_id_by(ctx:str) -> str:
@@ -85,21 +108,7 @@ def last_sentiment_distribution_by(thread_id:str, platform_id:str, duration:str)
          A dictionary containing the distrubution info as per duration.
     """
 
-    # Find out duration
-    if duration == "1h":
-        h = 1
-    elif duration == "24h":
-        h = 24
-    elif duration == "7d":
-        h = 7*24
-    elif duration == "30d":
-        h = 30*24
-    else:
-        h=24
-    nn= datetime.now()
-    nl = nn - timedelta(hours=h)
-    start = nl.astimezone(pytz.utc).strftime('%Y-%m-%d %H:%M:%S')
-    end = nn.astimezone(pytz.utc).strftime('%Y-%m-%d %H:%M:%S')
+    start, end = _get_time_range_from_duration(duration)
     
     sd_data = sqlcn.posts.sentiment_distribution_by_time(thread_id=thread_id, platform_id=platform_id, start=start, end=end)
     counts=[]
@@ -132,7 +141,7 @@ def last_semtiment_score_by(thread_id:str, platform_id:str, duration:str) -> dic
 
     Args:
         thread_id: The Id of Thread.
-        The name of source platform, one of value from ['twitter', 'google-search', 'google-news', 'instagram'].
+        platform_id: The name of source platform, one of value from ['twitter', 'google-search', 'google-news', 'instagram'].
         duration: The time range from the past to the present, the available ranges are: 
             - 1h (from 1 hour ago to now)
             - 24h (from 24 hours ago to now)
@@ -143,21 +152,7 @@ def last_semtiment_score_by(thread_id:str, platform_id:str, duration:str) -> dic
         A dictionary containing a list of post info.
     """
 
-    # Find out duration
-    if duration == "1h":
-        h = 1
-    elif duration == "24h":
-        h = 24
-    elif duration == "7d":
-        h = 7*24
-    elif duration == "30d":
-        h = 30*24
-    else:
-        h=24
-    nn= datetime.now()
-    nl = nn - timedelta(hours=h)
-    start = nl.astimezone(pytz.utc).strftime('%Y-%m-%d %H:%M:%S')
-    end = nn.astimezone(pytz.utc).strftime('%Y-%m-%d %H:%M:%S')
+    start, end = _get_time_range_from_duration(duration)
 
     return semtiment_score_by(thread_id, platform_id, start, end)
 
@@ -168,7 +163,7 @@ def semtiment_score_by(thread_id:str, platform_id:str, start:str, end:str) -> di
 
     Args:
         thread_id: The Id of Thread.
-        The name of source platform, one of value from ['twitter', 'google-search', 'google-news', 'instagram'].
+        platform_id: The name of source platform, one of value from ['twitter', 'google-search', 'google-news', 'instagram'].
         start: Start date of data, format: "%Y-%m-%d %H:%M:%S"
         end: End date of date, format: "%Y-%m-%d %H:%M:%S"
 
@@ -262,7 +257,41 @@ def last_sentiment_level(thread_id:str, platform_id:str) -> str:
     return str(sqlcn.sentiment_summaries.last_sentiment_level(thread_id, platform_id))
 
 
+def sentiment_level_by(thread_id: str, duration:str)->dict:
+    """
+    List all sentiment level data within specific time range.
 
+    Args:
+        thread_id: The Id of Thread.
+        duration: The time range from the past to the present, the available ranges are: 
+            - 1h (from 1 hour ago to now)
+            - 24h (from 24 hours ago to now)
+            - 7d (from 7 days ago to now )
+            - 30d (from 30 days ago to now)
+
+    Returns:
+        A dictionary containing the sentiment level info as per duration.
+    """
+    start, end = _get_time_range_from_duration(duration)
+
+    ss_data = sqlcn.sentiment_summaries.sentiment_level_by_timestamp(thread_id, start, end)
+    
+    created_dates=[]
+    sentiment_levels=[]
+    platform_ids=[]
+    if len(ss_data) > 0:
+        for row in ss_data:
+            created_dates.append(row.get("created_at"))
+            sentiment_levels.append(row.get("sentiment_level"))
+            platform_ids.append(row.get("platform_id"))
+
+        return {
+                "time": created_dates,
+                "sentiment_level": sentiment_levels,
+                "platform": platform_ids
+            }
+    else:
+        return {}
 
 
 
@@ -277,6 +306,110 @@ def thread_detail_by(thread_id:str) -> dict:
         A dictionary containing the thread info.
     """
     return sqlcn.threads.thread_by_id(thread_id)
+
+
+
+def latest_100_posts(thread_id:str) -> list[dict]:
+    """
+    List the latest post records as per thread id.
+
+    Args:
+        thread_id: The Id of Thread.
+
+    Returns:
+        A list of post.
+    """
+    return sqlcn.posts.latest_100_posts(thread_id)
+
+
+async def linechart_by_sentiment_level(thread_id:str, duration:str, tool_context: 'ToolContext') -> dict:
+    """
+    Create a line chart based on sentiment level during the given time range.
+
+    Args:
+        thread_id: The Id of Thread.
+        duration: The time range from the past to the present, the available ranges are: 
+            - 1h (from 1 hour ago to now)
+            - 24h (from 24 hours ago to now)
+            - 7d (from 7 days ago to now )
+            - 30d (from 30 days ago to now)
+
+    Returns:
+        A line chart.
+    """
+    # start, end = _get_time_range_from_duration(duration)
+    sl_data = sentiment_level_by(thread_id, duration)
+    
+    if len(sl_data) > 0:
+        x = sl_data.get("time")
+        y = sl_data.get("sentiment_level")
+        plt.figure(figsize=(10, 6))
+        plt.plot(x, y, label='Sentiment Level', color='blue', linestyle='-')
+
+        plt.title('Sentiment Level Line Chart')
+        plt.xlabel('Time')
+        plt.ylabel('Sentiment Level')
+
+        plt.legend()
+        plt.grid(True)
+        buffer = io.BytesIO()
+        plt.savefig(buffer, dpi=300)
+        image_bytes = buffer.getvalue()
+        plt.close()
+        buffer.close()
+
+        await tool_context.save_artifact(
+            'sentiment-level-line-chart.png',
+            types.Part.from_bytes(data=image_bytes, mime_type='image/png'),
+        )
+
+        return {
+            'status': 'success',
+            'detail': 'Linechart generated successfully and stored in artifacts.',
+            'filename': 'sentiment-level-line-chart.png',
+            'part': types.Part(
+                    inline_data=types.Blob(
+                        mime_type="image/png",
+                        data=image_bytes
+                    )
+                )
+        }
+    else:
+        return {}
+
+
+
+
+def list_all_threads():
+    """
+    List all avaiable threads. 
+    THREAD/thread is context/entity, which includes all related info, such as evet, context, time, etc. 
+    Added Thread before any sentiment analysis kicks in.
+
+    Returns:
+        A list of thread.
+    """
+    return sqlcn.threads.list_threads()
+
+def add_thread(thread_name: str, context: str, instructions: str, platform_ids: list[str]):
+    thread = {
+        "display_name": thread_name,
+        "context": context,
+        "instructions": instructions,
+        "platform_ids": platform_ids,
+    }
+    th = sqlcn.threads.create_thread(thread)
+    return th
+
+def list_all_platforms():
+    """
+    List all platform records.
+
+    Returns:
+        A list of platform.
+    """
+    return sqlcn.platforms.list_platforms()
+
 
 
 # Try output images 

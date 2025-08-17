@@ -180,7 +180,7 @@ class Post():
             with self.engine.connect() as conn:
                 rows = conn.execute(stmt).fetchall()
                 for r in rows:
-                    d_posts.append(r)
+                    d_posts.append(r._asdict())
         except Exception as e:
             print(e)
         finally:
@@ -213,7 +213,7 @@ class Post():
             with self.engine.connect() as conn:
                 rows = conn.execute(stmt).fetchall()
                 for r in rows:
-                    d_posts.append(r)
+                    d_posts.append(r._asdict())
         except Exception as e:
             print(e)
         finally:
@@ -245,7 +245,7 @@ class Post():
             with self.engine.connect() as conn:
                 rows = conn.execute(stmt).fetchall()
                 for r in rows:
-                    d_posts.append(r)
+                    d_posts.append(r._asdict())
         except Exception as e:
             print(e)
             conn.rollback()
@@ -358,7 +358,6 @@ class Post():
                 .where(
                     and_(
                         self.table.c.thread_id == int(thread_id),
-                        self.table.c.status == "pending"
                     )
                 )
                 .order_by(self.table.c.created_at.desc()).limit(100)
@@ -370,28 +369,10 @@ class Post():
             with self.engine.connect() as conn:
                 rows = conn.execute(stmt).fetchall()
                 for r in rows:
-                    d_posts.append(r)
-                    update_stmt = (
-                        update(self.table)
-                            .where(
-                                and_(
-                                    self.table.c.post_id == r.post_id,
-                                    self.table.c.thread_id == r.thread_id,
-                                    self.table.c.status == "pending"
-                                )
-                            )
-                            .values(
-                                updated_at=datetime.now(UTC).isoformat(),
-                                status="processing"
-                            )
-                    )
-                    print(update_stmt)
-                    conn.execute(update_stmt)
-                conn.commit()
+                    d_posts.append(r._asdict())
                 
         except Exception as e:
             print(e)
-            conn.rollback()
         finally:
             print("finally")
             conn.close()

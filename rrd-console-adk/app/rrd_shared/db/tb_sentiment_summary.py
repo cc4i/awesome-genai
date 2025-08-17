@@ -206,6 +206,7 @@ class SentimentSummary():
 
 
     def sentiment_level_by_timestamp(self, thread_id: str, start: str, end: str) -> list[dict]:
+        print(f"thread_id: {thread_id}, start: {start}, end: {end}")
         stmt = (
             select(self.table)
             .where(
@@ -219,6 +220,7 @@ class SentimentSummary():
             
         )
         sls=[]
+        print(stmt)
         try:
             with self.engine.connect() as conn:
                 rows = conn.execute(stmt).fetchall()

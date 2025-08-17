@@ -17,12 +17,11 @@ import os
 from zoneinfo import ZoneInfo
 
 import google.auth
-from google.adk.agents import Agent, LlmAgent, SequentialAgent
+from google.adk.agents import Agent, LlmAgent
 from google.adk.tools import google_search
 
 from app.config import config
 from google.adk.tools import agent_tool
-from google.adk.code_executors import BuiltInCodeExecutor
 from google.adk.planners import BuiltInPlanner
 from google.genai import types as genai_types
 from app.tools import (
@@ -35,6 +34,12 @@ from app.tools import (
     last_top100_neutral_posts,
     last_sentiment_level,
     thread_detail_by,
+    sentiment_level_by,
+    linechart_by_sentiment_level,
+    add_thread,
+    list_all_threads,
+    latest_100_posts,
+    list_all_platforms,
     generate_image
 )
 
@@ -55,8 +60,53 @@ AVAIABLE_TOOLS = [
     last_top100_neutral_posts,
     last_sentiment_level,
     thread_detail_by,
-    generate_image
+    latest_100_posts,
+    sentiment_level_by,
+    linechart_by_sentiment_level,
+    # generate_image
 ]
+
+textual_content_analysis_agent = LlmAgent(
+    name="textual_content_analysis_agent",
+    model=config.worker_model,
+    description="""
+        A highly skilled Textual Content Analysis Agent.
+    """,
+    instruction="""
+        You are a highly skilled Textual Content Analysis Agent. Your primary function is to analyze provided text and extract key insights, sentiments, topics, and entities in a structured, comprehensive, and actionable manner.    
+        
+        **Core Instructions**
+        1. Analyze the Textual Input:
+
+        You will receive a block of text. This could be a document, article, review, social media post, or any other form of written content.
+
+        2. Perform the following tasks:
+
+        - Sentiment Analysis: Determine the overall sentiment (positive, negative, neutral, or mixed) and identify specific phrases that contribute to that sentiment.
+
+        - Key Information Extraction:
+
+            Keywords: Extract the most important keywords and phrases.
+
+            Named Entities: Identify and categorize all named entities (e.g., people, organizations, locations, products, dates).
+
+            Topics/Themes: Identify the main topics or themes discussed in the text.
+
+        - Summarization: Provide a concise, high-level summary of the content's main points.
+
+        - Tone and Style: Assess the overall tone (e.g., formal, informal, urgent, objective) and writing style (e.g., technical, narrative, persuasive).
+
+        - Intent Recognition: Infer the author's intent (e.g., to complain, to provide feedback, to inform, to persuade).
+
+        3. Output:
+
+        Present your findings as a report, should include summary, sentiment_analysis, key_topics, entities, keywords, tone_and_style, and intent.
+
+        Current date: {datetime.datetime.now().strftime("%Y-%m-%d")}
+    """,
+    tools=[]+AVAIABLE_TOOLS,
+    sub_agents=[],
+)
 
 
 sa_execution_pipeline = LlmAgent(
@@ -75,8 +125,8 @@ sa_execution_pipeline = LlmAgent(
 
     ---
     ### Final Instructions
-    Generate a comprehensive report.
-    Do not include a "References" or "Sources" section; all citations must be in-line.
+    Generate a comprehensive report based on the execution plan. 
+    Do not include a "References" or "Sources" section; all citations must be in-line. 
 
     """,
     tools=[
@@ -142,10 +192,10 @@ sentiment_analysis_agent = LlmAgent(
         2.  **Refine:** Incorporate user feedback until the plan is approved.
         3.  **Execute:** Execute the plan to retrieve the data, Once the user gives EXPLICIT approval (e.g., "looks good, run it"). you MUST delegate the task to the `sa_execution_pipeline` agent, passing the approved plan.       
 
-        Current date: {datetime.datetime.now().strftime("%Y-%m-%d")}
-        
         Expand your work bounds if the first try returns no results. 
         Do not take any actions before the user gives EXPLICIT approval. Your job is to Plan, Refine, and Delegate.
+
+        Current date: {datetime.datetime.now().strftime("%Y-%m-%d")}
     """,
     tools=[agent_tool.AgentTool(agent=plan_generator)],
     sub_agents=[sa_execution_pipeline],
@@ -153,40 +203,48 @@ sentiment_analysis_agent = LlmAgent(
 )
 
 
-data_extraction_agent = LlmAgent(
-    name="data_extraction_agent",
+
+sentiment_analysis_management_agent = LlmAgent(
+    name="sentiment_analysis_management_agent",
     model=config.worker_model,
-   
-    description="Precisely extract data by using all avaiable tools.""",
-    instruction="""
-        You are a data extractor. Your task is to precisely extract data by using all avaiable tools, output as requested format.
-
-        **INSTRUCTION**
-        - Only use tools have been give. 
-        - Think thoroughly to determine right tools. 
-    
-        Current date: {datetime.datetime.now().strftime("%Y-%m-%d")}
+    description="""
+        You are a sentiment analysis management agent.
     """,
-    tools=[agent_tool.AgentTool(agent=google_search)] + AVAIABLE_TOOLS,
+    instruction="""
+        You are a sentiment analysis management agent, your task is to manage backend metadata in order to make sure sentiment analysis running smoothly.
+    """,
+    tools=[list_all_threads, add_thread, list_all_platforms],
+    sub_agents=[],
 )
-
 
 root_agent = Agent(
     name="root_agent",
-    model=config.worker_model,
-    instruction="""
-        You are a steering agent, your task is to delegate work to the most appropriate specialized agents or tools available to you.
+    model=config.critic_model,
+    description="""
+        A social listening agent and delegate work to the most appropriate specialized agents or tools.
+    """,
+    instruction=f"""
+        You are a steering agent responsible for delegating work to specialized agents or tools. Your primary goal is to efficiently and effectively distribute tasks to the most appropriate agent based on the task's requirements. 
 
         AVAILABLE SPECIALIZED AGENTS:
-        1. **data_extraction_agent** - Precisely extract data by using all avaiable tools.
-        2. **sentiment_analysis_agent** - Primary Sentiment Analysis assistant.
+        1. **sentiment_analysis_agent** - Primary Sentiment Analysis assistant.
+        2. **sentiment_analysis_management_agent** - Sentiment Analysis Management Agent, manage and maintain backend metadata.
+        3. **textual_content_analysis_agent** - Textual Content Analysis Agent.
+
+        When you receive a task, analyze it to determine which specialized agent is best suited to handle it. Delegate the task accordingly. 
+        You are not allowed to say "NO" if you have specialized agents or tools available to complete the task. 
+        
+        Current date: {datetime.datetime.now().strftime("%Y-%m-%d")}
+
     """,
     # tools=[
     #     agent_tool.AgentTool(agent=data_extraction_agent),
     #     agent_tool.AgentTool(agent=sentiment_analysis_agent),
     # ],
     sub_agents=[
-        data_extraction_agent,
         sentiment_analysis_agent,
+        textual_content_analysis_agent,
+        sentiment_analysis_management_agent,
     ],
+    tools=[generate_image]
 )

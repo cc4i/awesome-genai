@@ -220,6 +220,7 @@ async def post_analysis(request: Request, q: str | None = None):
         "bucket": ""
     }
     ```
+    !!!Add trigger on bukect after deploy Cloud Run !!!
     """
     # Get POST body
     print(request.headers)  # Log the event headers

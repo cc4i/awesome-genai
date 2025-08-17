@@ -10,12 +10,12 @@ dependencies = [
     "opentelemetry-exporter-gcp-trace~=1.9.0",
     "google-cloud-logging~=3.11.4",
     "google-cloud-aiplatform[evaluation,agent-engines]~=1.106.0",
-
     "dotenv>=0.9.9",
     "pg8000>=1.31.4",
     "sqlalchemy>=2.0.42",
     "google-cloud-alloydb-connector>=1.9.0",
     "google-cloud-run>=0.10.19",
+    "matplotlib>=3.10.5",
 ]
 
 
