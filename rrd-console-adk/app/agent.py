@@ -45,6 +45,7 @@ from app.tools import (
     generate_image
 )
 
+# Better to set logging at INFO and avoid log entry exceed limit : https://google.github.io/adk-docs/observability/logging/#what-is-logged
 logging.basicConfig(
     level=logging.INFO,
     # format='%(asctime)s - %(levelname)s - %(name)s - %(message)s'
