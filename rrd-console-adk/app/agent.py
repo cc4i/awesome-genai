@@ -80,36 +80,26 @@ textual_content_analysis_agent = LlmAgent(
         A highly skilled Textual Content Analysis Agent.
     """,
     instruction="""
-        You are a highly skilled Textual Content Analysis Agent. Your primary function is to analyze provided text and extract key insights, sentiments, topics, and entities in a structured, comprehensive, and actionable manner.    
+        You are a highly skilled Textual Content Analysis Agent. 
+        Your primary function is to analyze provided text and extract key insights, sentiments, topics, and entities in a structured, 
+        comprehensive, and actionable manner.    
         
-        **Core Instructions**
-        1. Analyze the Textual Input:
+        Analyze the Textual Input:
+        `{textual_output}`
 
-        You will receive a block of text. This could be a document, article, review, social media post, or any other form of written content.
+        Perform the following tasks:
+        1. Sentiment Analysis: Determine the overall sentiment (positive, negative, neutral, or mixed) and identify specific phrases that contribute to that sentiment.
+        2. Key Information Extraction:
+            *   Keywords: Extract the most important keywords and phrases.
+            *   Named Entities: Identify and categorize all named entities (e.g., people, organizations, locations, products, dates).
+            *   Topics/Themes: Identify the main topics or themes discussed in the text.
+        3. Summarization: Provide a concise, high-level summary of the content's main points.
+        4. Tone and Style: Assess the overall tone (e.g., formal, informal, urgent, objective) and writing style (e.g., technical, narrative, persuasive).
+        5. Intent Recognition: Infer the author's intent (e.g., to complain, to provide feedback, to inform, to persuade).
 
-        2. Perform the following tasks:
-
-        - Sentiment Analysis: Determine the overall sentiment (positive, negative, neutral, or mixed) and identify specific phrases that contribute to that sentiment.
-
-        - Key Information Extraction:
-
-            Keywords: Extract the most important keywords and phrases.
-
-            Named Entities: Identify and categorize all named entities (e.g., people, organizations, locations, products, dates).
-
-            Topics/Themes: Identify the main topics or themes discussed in the text.
-
-        - Summarization: Provide a concise, high-level summary of the content's main points.
-
-        - Tone and Style: Assess the overall tone (e.g., formal, informal, urgent, objective) and writing style (e.g., technical, narrative, persuasive).
-
-        - Intent Recognition: Infer the author's intent (e.g., to complain, to provide feedback, to inform, to persuade).
-
-        3. Output:
-
-        Present your findings as a report, should include summary, sentiment_analysis, key_topics, entities, keywords, tone_and_style, and intent.
-
-        Current date: {datetime.datetime.now().strftime("%Y-%m-%d")}
+        Output:
+        Present your findings as a report, should include summary, sentiment_analysis, key_topics, entities, keywords, tone_and_style, and intent.       
+        
     """,
     tools=[]+AVAIABLE_TOOLS,
     sub_agents=[],
@@ -136,10 +126,11 @@ sa_execution_pipeline = LlmAgent(
     Do not include a "References" or "Sources" section; all citations must be in-line. 
 
     """,
+    output_key="textual_output",
     tools=[
         # agent_tool.AgentTool(agent=google_search), 
     ] + AVAIABLE_TOOLS,
-    sub_agents=[],
+    sub_agents=[textual_content_analysis_agent],
 )
 
 plan_generator = LlmAgent(
@@ -197,6 +188,10 @@ sentiment_analysis_agent = LlmAgent(
      You are a primary Sentiment Analysis assistant, collaborates with the user to create an execution plan, and then executes it upon approval.
     """,
     instruction=f"""
+        You are an AI assistant designed to help users by creating, refining, and executing plans to answer their questions or fulfill their requests. 
+        You have access to a `plan_generator` tool and a `sa_execution_pipeline` agent. 
+        Your primary responsibility is to create a plan, get it approved by the user, and then delegate the task to the `sa_execution_pipeline` agent. 
+
         **CRITICAL RULE: Never answer a question directly or refuse a request.** 
         Your one and only first step is to use the `plan_generator` tool to propose an execution plan for the user's topic.
         If the user asks a question, you MUST immediately call `plan_generator` to create a plan to answer the question.
@@ -244,7 +239,6 @@ root_agent = Agent(
         AVAILABLE SPECIALIZED AGENTS:
         1. **sentiment_analysis_agent** - Primary Sentiment Analysis assistant.
         2. **sentiment_analysis_management_agent** - Sentiment Analysis Management Agent, manage and maintain backend metadata.
-        3. **textual_content_analysis_agent** - Textual Content Analysis Agent.
 
         When you receive a task, analyze it to determine which specialized agent is best suited to handle it. Delegate the task accordingly. 
         You are not allowed to say "NO" if you have specialized agents or tools available to complete the task. 
@@ -258,8 +252,7 @@ root_agent = Agent(
     # ],
     sub_agents=[
         sentiment_analysis_agent,
-        textual_content_analysis_agent,
         sentiment_analysis_management_agent,
     ],
-    tools=[generate_image]
+    tools=[generate_image, agent_tool.AgentTool(agent=textual_content_analysis_agent)]
 )

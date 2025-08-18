@@ -1,11 +1,21 @@
 
 #
 ## Simple questions:
-What's the sentiment status of "?" in twitter last week?
-Can you analyze the most common wording in the top 100 worst posts?
-what's the sentiment status of "after Q2 earning for Grab" last 7 days?Create a sentiment line chart of "after Q2 earning for Grab" last 7 days?
-List all available Threads at sentiment system.
-List all available source platforms at sentiment system.
+- What's the sentiment status of "?" in twitter last week?
+
+- what's the sentiment status of "after Q2 earning for Grab" last 7 days?
+- Create a sentiment line chart of "after Q2 earning for Grab" last 7 days?
+
+- List all available Threads at sentiment system.
+- List all available source platforms at sentiment system.
+
+- Could you list top 100 worst posts of "after Q2 earning for Grab" in twitter?
+- Show me those post as table format.
+- Can you analyze the most common wording in those posts?
+
+
+
+
 
 
 create a sentiment line chart of "First order in Galaxa" last 7 days
