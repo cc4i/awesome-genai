@@ -14,7 +14,7 @@
 
 import datetime
 import os
-from zoneinfo import ZoneInfo
+import logging
 
 import google.auth
 from google.adk.agents import Agent, LlmAgent
@@ -24,6 +24,8 @@ from app.config import config
 from google.adk.tools import agent_tool
 from google.adk.planners import BuiltInPlanner
 from google.genai import types as genai_types
+# from google.adk.sessions import VertexAiSessionService
+
 from app.tools import (
     thread_id_by, 
     last_semtiment_score_by, 
@@ -43,6 +45,10 @@ from app.tools import (
     generate_image
 )
 
+logging.basicConfig(
+    level=logging.INFO,
+    # format='%(asctime)s - %(levelname)s - %(name)s - %(message)s'
+)
 
 _, project_id = google.auth.default()
 os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
@@ -144,8 +150,8 @@ plan_generator = LlmAgent(
     ),
 
     instruction=f"""
-    You are a sentiment analysis strategist. Your job is to create a the most comprehensive and high-quality EXECUTION PLAN, not a summary. If there is already a EXECUTION PLAN in the session state,
-    improve upon it based on the user feedback. Following the instructions restrictedly. 
+    You are a sentiment analysis strategist. Your job is to create a the most comprehensive and high-quality EXECUTION PLAN, not a summary. 
+    If there is already a EXECUTION PLAN in the session state, improve upon it based on the user feedback. Following the instructions restrictedly. 
 
     EXECUTION PLAN(SO FAR):
     {{ execution_plan? }}
@@ -154,8 +160,16 @@ plan_generator = LlmAgent(
     Your plan must clearly classify each goal for downstream execution. Each bullet point should start with a task type prefix:
     - **`[ACTION]`**: For goals that primarily involve information gathering, investigation, analysis, or data collection, chose the most appropriate tool from avaiable tools.
     - **`[DELIVERABLE]`**: For goals that involve synthesizing collected information, creating structured outputs (e.g., tables, charts, summaries, reports), or compiling final output artifacts.
+    EXECUTION PLAN MUST inlcude enough comprehensive data though all avaiable tools and plan MUST follow this format.
+
 
     **INITIAL RULE: Your initial output MUST start with a bulleted list of action-oriented goals, followed by any *inherently implied* deliverables.**
+    - All initial goals will be classified as `[ACTION]` tasks.
+    - A good goal for `[ACTION]` starts with a verb like "Analyze," "Identify," "Retrieve,"
+    - A bad output is a statement of fact like "The event was in April 2024."
+    - **Proactive Implied Deliverables (Initial):** If any of your initial `[ACTION]` goals inherently imply a standard output or deliverable (e.g., a comparative analysis suggesting a comparison table, or a comprehensive review suggesting a summary document), you MUST add these as additional, distinct goals immediately after the initial goals. Phrase these as *synthesis or output creation actions* (e.g., "Create a summary," "Develop a comparison," "Compile a report") and prefix them with `[DELIVERABLE][IMPLIED]`.
+    - Include comprehesive information as much as possible through all avaiable tools.
+
 
     **REFINEMENT RULE**:
     - **Integrate Feedback & Mark Changes:** When incorporating user feedback, make targeted modifications to existing bullet points. Add `[MODIFIED]` to the existing task type and status prefix (e.g., `[ACTION][MODIFIED]`). If the feedback introduces new goals:
@@ -164,7 +178,7 @@ plan_generator = LlmAgent(
     - **Proactive Implied Deliverables (Refinement):** Beyond explicit user feedback, if the nature of an existing goal (e.g., requiring a structured comparison, deep dive analysis, or broad synthesis) or a `[DELIVERABLE]` goal inherently implies an additional, standard output or synthesis step (e.g., a detailed report following a summary, or a visual representation of complex data), proactively add this as a new goal. Phrase these as *synthesis or output creation actions* and prefix them with `[DELIVERABLE][IMPLIED]`.
     - **Maintain Order:** Strictly maintain the original sequential order of existing bullet points. New bullets, whether `[NEW]` or `[IMPLIED]`, should generally be appended to the list, unless the user explicitly instructs a specific insertion point.
 
-    
+
     Current date: {datetime.datetime.now().strftime("%Y-%m-%d")}
     """,
     tools=[
@@ -219,7 +233,7 @@ sentiment_analysis_management_agent = LlmAgent(
 
 root_agent = Agent(
     name="root_agent",
-    model=config.critic_model,
+    model=config.worker_model,
     description="""
         A social listening agent and delegate work to the most appropriate specialized agents or tools.
     """,

@@ -1,3 +1,6 @@
+include ./app/.env
+export $(shell sed 's/=.*//' ./app/.env)
+
 # Install dependencies using uv package manager
 install:
 	@command -v uv >/dev/null 2>&1 || { echo "uv is not installed. Installing uv..."; curl -LsSf https://astral.sh/uv/0.6.12/install.sh | sh; source $HOME/.local/bin/env; }
@@ -11,7 +14,7 @@ playground:
 	@echo "|                                                                             |"
 	@echo "| 🔍 IMPORTANT: Select the 'app' folder to interact with your agent.          |"
 	@echo "==============================================================================="
-	uv run adk web --port 8501
+	uv run adk web --log_level DEBUG --port 8501
 
 # Deploy the agent remotely
 # Usage: make backend [IAP=true] [PORT=8080] - Set IAP=true to enable Identity-Aware Proxy, PORT to specify container port
@@ -32,7 +35,8 @@ cloud-run-backend:
 agent-engine-backend:
 	# Export dependencies to requirements file using uv export.
 	uv export --no-hashes --no-header --no-dev --no-emit-project --no-annotate --frozen > .requirements.txt 2>/dev/null || \
-	uv export --no-hashes --no-header --no-dev --no-emit-project --frozen > .requirements.txt && uv run app/agent_engine_app.py
+	uv export --no-hashes --no-header --no-dev --no-emit-project --frozen > .requirements.txt && uv run app/agent_engine_app.py \
+	--set-env-vars DB_USER=${DB_USER},DB_PASS=${DB_PASS}
 
 # Launch local development server with hot-reload
 local-backend:

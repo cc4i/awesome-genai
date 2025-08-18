@@ -22,7 +22,7 @@ class SqlCN():
         location = os.getenv("LOCATION", "asia-southeast1")
         cluster_id = os.getenv("CLUSTER_ID", "rrd-all-in-one")
         instance_id = os.getenv("INSTANCE_ID", "rrd-all-in-one-primary")
-        user = os.getenv("DB_USER", "postgres")
+        user = os.getenv("DB_USER")
         password = os.getenv("DB_PASS")
         db = os.getenv("DB_NAME", "postgres")
 

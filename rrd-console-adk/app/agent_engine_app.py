@@ -196,6 +196,7 @@ if __name__ == "__main__":
 
     # Parse environment variables if provided
     env_vars = {}
+    print(f"args.set_env_vars -> {args.set_env_vars}")
     if args.set_env_vars:
         for pair in args.set_env_vars.split(","):
             key, value = pair.split("=", 1)

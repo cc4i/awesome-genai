@@ -3,9 +3,12 @@
 ## Simple questions:
 What's the sentiment status of "?" in twitter last week?
 Can you analyze the most common wording in the top 100 worst posts?
+what's the sentiment status of "after Q2 earning for Grab" last 7 days?Create a sentiment line chart of "after Q2 earning for Grab" last 7 days?
+List all available Threads at sentiment system.
+List all available source platforms at sentiment system.
 
 
-
+create a sentiment line chart of "First order in Galaxa" last 7 days
 ## General Sentiment & Polarity
 - What is the overall sentiment of the content? (Is it generally positive, negative, neutral, or mixed?)
 

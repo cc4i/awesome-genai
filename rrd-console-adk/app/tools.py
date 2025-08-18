@@ -358,6 +358,11 @@ async def linechart_by_sentiment_level(thread_id:str, duration:str, tool_context
         plt.close()
         buffer.close()
 
+        # from google.adk.sessions import VertexAiSessionService
+        # REASONING_ENGINE_APP_NAME="projects/multi-gke-ops/locations/us-central1/reasoningEngines/445988304505012224"
+        # session_service = VertexAiSessionService(project="multi-gke-ops", location="us-central1")
+        # session_service = await session_service.create_session(app_name=REASONING_ENGINE_APP_NAME, user_id="test-session")
+
         await tool_context.save_artifact(
             'sentiment-level-line-chart.png',
             types.Part.from_bytes(data=image_bytes, mime_type='image/png'),
@@ -365,7 +370,7 @@ async def linechart_by_sentiment_level(thread_id:str, duration:str, tool_context
 
         return {
             'status': 'success',
-            'detail': 'Linechart generated successfully and stored in artifacts.',
+            'detail': 'Image generated successfully and stored in artifacts.',
             'filename': 'sentiment-level-line-chart.png',
             'part': types.Part(
                     inline_data=types.Blob(
