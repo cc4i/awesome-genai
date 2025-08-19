@@ -18,6 +18,9 @@
 
 import os
 import io
+import re
+import json
+from typing import Any, Dict, Optional
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 import matplotlib as mpl
@@ -26,8 +29,11 @@ import matplotlib.pyplot as plt
 from app.rrd_shared.db.sql_cn import SqlCN
 
 from google.genai import Client
+from google.genai.types import GenerateContentConfig, Modality
 from google.adk.tools.tool_context import ToolContext
 from google.genai import types
+from google.adk.tools.base_tool import BaseTool
+from google.adk.tools.tool_context import ToolContext
 
 # All envariables
 load_dotenv()
@@ -38,6 +44,9 @@ project_id = os.getenv("PROJECT_ID", "multi-gke-ops")
 model_location = os.getenv("MODEL_LOCATION", "asia-southeast1")
 moded_id = os.getenv("MODEL_ID", "gemini-2.5-flash")
 
+AGENTSPACE_AUTH_ID = os.getenv("AGENTSPACE_AUTH_ID")
+DYNAMIC_AUTH_PARAM_NAME = "dynamic_auth_config" # Name of the parameter to inject
+DYNAMIC_AUTH_INTERNAL_KEY = "oauth2_auth_code_flow.access_token" # Internal key for the token
 
 def _get_time_range_from_duration(duration: str) -> tuple[str, str]:
     """
@@ -416,38 +425,69 @@ def list_all_platforms():
     return sqlcn.platforms.list_platforms()
 
 
+def dynamic_token_injection(tool: BaseTool, args: Dict[str, Any], tool_context: ToolContext) -> Optional[Dict]:
+    print(f"AGENTSPACE_AUTH_ID: {AGENTSPACE_AUTH_ID}")
+    print(f"tool: {tool}， args:  {args}， tool_context:  {tool_context}")
+    state_dict = tool_context.state.to_dict()
+    print(f"state_dict: {state_dict}")
+
+    try:
+        pattern = re.compile(r'^temp:'+AGENTSPACE_AUTH_ID+'.*')
+        matched_auth = {key: value for key, value in state_dict.items() if pattern.match(key)}
+
+        if len(matched_auth) > 0:
+            token_key = list(matched_auth.keys())[0]
+            print(f"**** token_key:::: {token_key}")
+        else:
+            print("No valid tokens found")
+            return None
+
+        print(f"*** Before tool callback for tool: {tool.name}")
+        print(f"*** OAuth object::: {tool_context.state[token_key]}")
+
+        access_token = tool_context.state[token_key]
+        print(f"Access token found in session state with key '{token_key}'. Injecting dynamic auth.")
+        dynamic_auth_config = {DYNAMIC_AUTH_INTERNAL_KEY: access_token}
+        args[DYNAMIC_AUTH_PARAM_NAME] = json.dumps(dynamic_auth_config)
+        print(f"Arguments after injection: {args}")
+    except Exception as e:
+        print("No valid tokens found")
+
+    return None
+
 
 # Try output images 
 async def generate_image(prompt: str, tool_context: 'ToolContext'):
     
-  """Generates an image based on the prompt."""
-  client = Client()
-  response = client.models.generate_images(
-      model='imagen-3.0-generate-002',
-      prompt=prompt,
-      config={'number_of_images': 1},
-  )
-  if not response.generated_images:
-    return {'status': 'failed'}
-  image_bytes = response.generated_images[0].image.image_bytes
-#   return types.Part(
-#     inline_data=types.Blob(
-#         mime_type="image/png",
-#         data=image_bytes
-#     )
-#   )
-  await tool_context.save_artifact(
-      'image.png',
-      types.Part.from_bytes(data=image_bytes, mime_type='image/png'),
-  )
-  return {
-      'status': 'success',
-      'detail': 'Image generated successfully and stored in artifacts.',
-      'filename': 'image.png',
-      'part': types.Part(
+    """Generates an image based on the prompt."""
+    client = Client(project=project_id)
+    response = client.models.generate_content(
+        model='gemini-2.0-flash-preview-image-generation',
+        contents=(f"{prompt}"),
+        config=GenerateContentConfig(response_modalities=[Modality.TEXT, Modality.IMAGE])
+    )
+    for part in response.candidates[0].content.parts:
+        if part.text:
+            print(part.text)
+        elif part.inline_data:
+            image_bytes = part.inline_data.data
+
+    if not image_bytes:
+        return {'status': 'failed'}
+    print(f"image_bytes: {len(image_bytes)}")
+
+    await tool_context.save_artifact(
+        'image.png',
+        types.Part.from_bytes(data=image_bytes, mime_type='image/png'),
+    )
+    return {
+        'status': 'success',
+        'detail': 'Image generated successfully and stored in artifacts.',
+        'filename': 'image.png',
+        'part': types.Part(
             inline_data=types.Blob(
                 mime_type="image/png",
                 data=image_bytes
             )
         )
-  }
+    }

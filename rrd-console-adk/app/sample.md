@@ -1,29 +1,30 @@
 
 #
-## Simple questions:
+## Example questions:
 - What's the sentiment status of "?" in twitter last week?
+- what's the latest sentiment level of  "after Q2 earning for Grab" 
 
 - what's the sentiment status of "after Q2 earning for Grab" last 7 days?
 - Create a sentiment line chart of "after Q2 earning for Grab" last 7 days?
 
 - List all available Threads at sentiment system.
 - List all available source platforms at sentiment system.
+- List all available Threads as per metadata
 
 - Could you list top 100 worst posts of "after Q2 earning for Grab" in twitter?
 - Show me those post as table format.
 - Can you analyze the most common wording in those posts?
+- Which words, phrases, or sentences contribute most to the identified sentiment?
+
+- What is the overall sentiment of "..."?
 
 
 
+<<<
 
-
-
-create a sentiment line chart of "First order in Galaxa" last 7 days
 ## General Sentiment & Polarity
 - What is the overall sentiment of the content? (Is it generally positive, negative, neutral, or mixed?)
-
 - How strong is the expressed sentiment? (Is it slightly positive or very negative? Can we quantify its intensity?)
-
 - What is the distribution of sentiment across different pieces of content? (e.g., What percentage of customer reviews are positive, negative, or neutral?)
 
 ## Granular Understanding & Drivers
@@ -53,3 +54,6 @@ create a sentiment line chart of "First order in Galaxa" last 7 days
 - What are our strengths or areas of success, as highlighted by positive sentiment, that we should leverage?
 
 - What actionable steps can be taken based on this sentiment analysis? (e.g., "Prioritize bug fix for X feature," "Initiate a campaign highlighting Y benefit," "Follow up with customers expressing Z frustration.")
+
+
+>>>

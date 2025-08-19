@@ -42,7 +42,8 @@ from app.tools import (
     list_all_threads,
     latest_100_posts,
     list_all_platforms,
-    generate_image
+    generate_image,
+    dynamic_token_injection
 )
 
 # Better to set logging at INFO and avoid log entry exceed limit : https://google.github.io/adk-docs/observability/logging/#what-is-logged
@@ -84,10 +85,10 @@ textual_content_analysis_agent = LlmAgent(
         Your primary function is to analyze provided text and extract key insights, sentiments, topics, and entities in a structured, 
         comprehensive, and actionable manner.    
         
-        Analyze the Textual Input:
+        **Analyze the Textual Input:**
         `{textual_output}`
 
-        Perform the following tasks:
+        **Perform the following tasks:**
         1. Sentiment Analysis: Determine the overall sentiment (positive, negative, neutral, or mixed) and identify specific phrases that contribute to that sentiment.
         2. Key Information Extraction:
             *   Keywords: Extract the most important keywords and phrases.
@@ -97,8 +98,11 @@ textual_content_analysis_agent = LlmAgent(
         4. Tone and Style: Assess the overall tone (e.g., formal, informal, urgent, objective) and writing style (e.g., technical, narrative, persuasive).
         5. Intent Recognition: Infer the author's intent (e.g., to complain, to provide feedback, to inform, to persuade).
 
-        Output:
+        **Output:**
         Present your findings as a report, should include summary, sentiment_analysis, key_topics, entities, keywords, tone_and_style, and intent.       
+
+        **Notice**
+        If you cannot complete a task for any reason, you MUST delegate the task to the `root_agent` agent. 
         
     """,
     tools=[]+AVAIABLE_TOOLS,
@@ -117,13 +121,17 @@ sa_execution_pipeline = LlmAgent(
     Transform the provided data into a polished, professional, and meticulous report.
 
     ---
-    ### INPUT DATA
-    *   Execution Plan: `{execution_plan}`
+    **INPUT DATA**
+    - Execution Plan: `{execution_plan}`
 
     ---
-    ### Final Instructions
-    Generate a comprehensive report based on the execution plan. 
-    Do not include a "References" or "Sources" section; all citations must be in-line. 
+    **Final Instructions**
+    - Generate a comprehensive report based on the execution plan. 
+    - Do not include a "References" or "Sources" section; all citations must be in-line. 
+    
+    **Notice**
+    If you cannot complete a task for any reason, you MUST delegate the task to the `root_agent` agent. 
+
 
     """,
     output_key="textual_output",
@@ -222,6 +230,12 @@ sentiment_analysis_management_agent = LlmAgent(
     """,
     instruction="""
         You are a sentiment analysis management agent, your task is to manage backend metadata in order to make sure sentiment analysis running smoothly.
+
+        **Instruction**
+        - Using `list_all_threads` to list all threads in the metadata. 
+        - Using `add_thread` to create a new thread into metdadata. 
+        - Using `list_all_platforms` to list all platforms in the metadata, which are social platforms to be monitoring. 
+
     """,
     tools=[list_all_threads, add_thread, list_all_platforms],
     sub_agents=[],
@@ -236,9 +250,14 @@ root_agent = Agent(
     instruction=f"""
         You are a steering agent responsible for delegating work to specialized agents or tools. Your primary goal is to efficiently and effectively distribute tasks to the most appropriate agent based on the task's requirements. 
 
-        AVAILABLE SPECIALIZED AGENTS:
-        1. **sentiment_analysis_agent** - Primary Sentiment Analysis assistant.
-        2. **sentiment_analysis_management_agent** - Sentiment Analysis Management Agent, manage and maintain backend metadata.
+        **GREETING:**
+        1. Always greet the user politely and inform them of your role.
+        2. Ask the user how you can assist them, unless they have already stated their need.
+
+        
+        **AVAILABLE SPECIALIZED AGENTS:**
+        1. **sentiment_analysis_agent** - Specializes in Sentiment Analysis, based on socical listening data from various platforms. 
+        2. **sentiment_analysis_management_agent** - Specializes in managing and maintaining backend metadata.
 
         When you receive a task, analyze it to determine which specialized agent is best suited to handle it. Delegate the task accordingly. 
         You are not allowed to say "NO" if you have specialized agents or tools available to complete the task. 
@@ -254,5 +273,6 @@ root_agent = Agent(
         sentiment_analysis_agent,
         sentiment_analysis_management_agent,
     ],
-    tools=[generate_image, agent_tool.AgentTool(agent=textual_content_analysis_agent)]
+    tools=[generate_image, agent_tool.AgentTool(agent=textual_content_analysis_agent)],
+    before_tool_callback=dynamic_token_injection
 )
