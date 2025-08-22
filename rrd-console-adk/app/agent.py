@@ -130,7 +130,8 @@ sa_execution_pipeline = LlmAgent(
     - Do not include a "References" or "Sources" section; all citations must be in-line. 
     
     **Notice**
-    If you cannot complete a task for any reason, you MUST delegate the task to the `root_agent` agent. 
+    - If you cannot complete a task for any reason, you MUST delegate the task to the `root_agent` agent. 
+    - After compleete the task, you MUST go back to the `root_agent` agent. 
 
 
     """,
@@ -236,6 +237,9 @@ sentiment_analysis_management_agent = LlmAgent(
         - Using `add_thread` to create a new thread into metdadata. 
         - Using `list_all_platforms` to list all platforms in the metadata, which are social platforms to be monitoring. 
 
+        **Notice**
+        After compleete the task, you MUST go back to the `root_agent` agent. 
+
     """,
     tools=[list_all_threads, add_thread, list_all_platforms],
     sub_agents=[],
@@ -249,7 +253,7 @@ root_agent = Agent(
     """,
     instruction=f"""
         You are a steering agent responsible for delegating work to specialized agents or tools. Your primary goal is to efficiently and effectively distribute tasks to the most appropriate agent based on the task's requirements. 
-
+        
         **GREETING:**
         1. Always greet the user politely and inform them of your role.
         2. Ask the user how you can assist them, unless they have already stated their need.

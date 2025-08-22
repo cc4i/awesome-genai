@@ -1,17 +1,67 @@
 
 #
-## Example questions:
+
+
+## Sample questions
+
+### Intro
+
+You can build your own Agentic Applications and integrate with Agentspace. 
+Here's an example for Sentiment Analysis. 
+
+Underhoods there's multple AI agents work together and provide sentiment analysis cross various of social plafroms. 
+
+Agent who acts as a steering agent to manipulate other agents work together, to provide final analysis, include planning, data crawling, pre-processing, sentiment analysis, reprting, etc.
+
+Agent can provide analysis, report, chart, and so on. The target platforms and analysis capability can be tweak further. 
+
+Today's demo focus on socal listening from Twitter or X, all data here just for demo purpose. 
+
+### Demo
+>>> We prepared multiple senarios for this demo:
+- What can you do?
+- List all threads in the medadata
+
+1. Inflation and Purchasing Power
+2. Monitoring Brand Reputation after Q2 earning
+3. Gauging Market Reaction to Investment
+
+For the demo we show the planning phase to demonstrate how agent actually works, but in production you don't necessary need that. 
+
+>>> Inflation and Purchasing Power (Positive -> slightly negative)
+- What's the sentiment status of "Inflation and Purchasing Power" last 24 hours?
+- Could you include top 100 worst posts for your analysis?
+- Could you show me first 10 worst posts?
+- Could you show me first 10 worst posts of "Inflation and Purchasing Power" in twitter, output as table?
+- Draw an line chart to show sentiment trend of "Inflation and Purchasing Power" last 7 days?
+
+
+>>> Monitoring Brand Reputation after Q2 earning (Negative -> positive)
+
+- What's the sentiment level after "Q2 earning for Grab" last 7 days?
+- Could you also include top 100 worst posts to the analysis?
+- Also include some positive tone, please. 
+- Looks good to me, pls go ahead 
+- Draw an line chart to show sentiment trend of after "Q2 earning for Grab" last 7 days?
+- Can you analyze the most common wording in those posts?
+==================
+
 - What's the sentiment status of "?" in twitter last week?
 - what's the latest sentiment level of  "after Q2 earning for Grab" 
-
-- what's the sentiment status of "after Q2 earning for Grab" last 7 days?
-- Create a sentiment line chart of "after Q2 earning for Grab" last 7 days?
 
 - List all available Threads at sentiment system.
 - List all available source platforms at sentiment system.
 - List all available Threads as per metadata
 
+- Describe what the thread is referred to "Q2 earning for Grab"
+
+- what's the sentiment status of "after Q2 earning for Grab" last 24 hours?
+- what's the sentiment status of "after Q2 earning for Grab" last 7 days?
+- Create a sentiment line chart of "after Q2 earning for Grab" last 7 days?
+
+
 - Could you list top 100 worst posts of "after Q2 earning for Grab" in twitter?
+- Could you list top 100 worst posts of "after Q2 earning for Grab" in twitter, output as table?
 - Show me those post as table format.
 - Can you analyze the most common wording in those posts?
 - Which words, phrases, or sentences contribute most to the identified sentiment?

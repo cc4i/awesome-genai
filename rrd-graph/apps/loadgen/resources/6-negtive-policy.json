@@ -5,30 +5,22 @@
             "last_time": 10,
             "pause_time": 5,
             "total_tweets_per_ask": 25, 
-            "positive_percentage": 2, 
-            "neutral_percentage": 2,
-            "negative_percentage": 96
+            "positive_percentage": 5, 
+            "neutral_percentage": 5,
+            "negative_percentage": 90
         },
         {
             "last_time": 10, 
             "pause_time": 5, 
             "total_tweets_per_ask": 25,
-            "positive_percentage": 1, 
-            "neutral_percentage": 1,
-            "negative_percentage": 98
-        },
-        {
-            "last_time": 10, 
-            "pause_time": 5, 
-            "total_tweets_per_ask": 25,
-            "positive_percentage": 1, 
+            "positive_percentage": 10, 
             "neutral_percentage": 10,
-            "negative_percentage": 89
+            "negative_percentage": 80
         },
         {
             "last_time": 10, 
             "pause_time": 5, 
-            "total_tweets_per_ask": 25, 
+            "total_tweets_per_ask": 25,
             "positive_percentage": 10, 
             "neutral_percentage": 10,
             "negative_percentage": 80
@@ -37,33 +29,41 @@
             "last_time": 10, 
             "pause_time": 5, 
             "total_tweets_per_ask": 25, 
-            "positive_percentage": 15, 
-            "neutral_percentage": 15,
-            "negative_percentage": 70
-        },
-        {
-            "last_time": 10, 
-            "pause_time": 5, 
-            "total_tweets_per_ask": 25, 
-            "positive_percentage": 25, 
-            "neutral_percentage": 15,
+            "positive_percentage": 30, 
+            "neutral_percentage": 10,
             "negative_percentage": 60
         },
         {
             "last_time": 10, 
             "pause_time": 5, 
             "total_tweets_per_ask": 25, 
-            "positive_percentage": 45, 
-            "neutral_percentage": 15,
+            "positive_percentage": 30, 
+            "neutral_percentage": 5,
+            "negative_percentage": 60
+        },
+        {
+            "last_time": 10, 
+            "pause_time": 5, 
+            "total_tweets_per_ask": 25, 
+            "positive_percentage": 50, 
+            "neutral_percentage": 10,
             "negative_percentage": 40
         },
         {
             "last_time": 10, 
             "pause_time": 5, 
             "total_tweets_per_ask": 25, 
-            "positive_percentage": 45, 
+            "positive_percentage": 60, 
             "neutral_percentage": 10,
-            "negative_percentage": 45
+            "negative_percentage": 30
+        },
+        {
+            "last_time": 10, 
+            "pause_time": 5, 
+            "total_tweets_per_ask": 25, 
+            "positive_percentage": 70, 
+            "neutral_percentage": 10,
+            "negative_percentage": 20
         }
     ]
 }
