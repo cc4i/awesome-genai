@@ -124,12 +124,12 @@ def deploy_agent_engine_app(
         "extra_packages": extra_packages,
         "env_vars": env_vars,
         "service_account": service_account,
-        # "resource_limits": {
-        #     "cpu": "8",
-        #     "memory": "32Gi",
-        # },
-        # "min_instances": "1",
-        # "max_instances": "10",
+        "resource_limits": {
+            "cpu": "8",
+            "memory": "32Gi",
+        },
+        "min_instances": 1,
+        "max_instances": 10,
     }
     logging.info(f"Agent config: {agent_config}")
     agent_config["requirements"] = requirements
@@ -175,7 +175,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--agent-name",
-        default="rrd-console-agent",
+        default="rrd-console-agent-v2",
         help="Name for the agent engine",
     )
     parser.add_argument(

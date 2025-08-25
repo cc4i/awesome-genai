@@ -491,3 +491,12 @@ async def generate_image(prompt: str, tool_context: 'ToolContext'):
             )
         )
     }
+
+
+def transfer_to_root_agent(tool_context: 'ToolContext'):
+    agent_name = tool_context.agent_name
+    if agent_name != "root_agent":
+        return None
+    else:
+        tool_context.actions.transfer_to_agent='root_agent'
+        return None

@@ -38,11 +38,11 @@ For the demo we show the planning phase to demonstrate how agent actually works,
 
 >>> Monitoring Brand Reputation after Q2 earning (Negative -> positive)
 
-- What's the sentiment level after "Q2 earning for Grab" last 7 days?
+- What's the sentiment level of "Q2 earning for Grab" last 7 days?
 - Could you also include top 100 worst posts to the analysis?
 - Also include some positive tone, please. 
 - Looks good to me, pls go ahead 
-- Draw an line chart to show sentiment trend of after "Q2 earning for Grab" last 7 days?
+- Draw an line chart to show sentiment trend of "Q2 earning for Grab" last 24h?
 - Can you analyze the most common wording in those posts?
 ==================
 

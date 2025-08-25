@@ -42,6 +42,7 @@ from app.tools import (
     list_all_threads,
     latest_100_posts,
     list_all_platforms,
+    transfer_to_root_agent,
     generate_image,
     dynamic_token_injection
 )
