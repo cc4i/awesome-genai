@@ -21,7 +21,7 @@ from models.exceptions import APIError, StorageError
 from utils.logger import logger
 
 # Constants
-MODEL_ID = "gemini-2.0-flash-preview-image-generation"
+MODEL_ID = "gemini-2.5-flash-image-preview"
 MAX_OUTPUT_TOKENS = 8192
 TEMPERATURE = 1
 TOP_P = 0.95
