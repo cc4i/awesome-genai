@@ -14,7 +14,7 @@ logger = logging.getLogger("media_gen")
 logger.setLevel(logging.INFO)
 
 # Create file handler
-log_file = f"logs/media_gen_{datetime.now().strftime('%Y%m%d')}.log"
+log_file = f"tmp/logs/media_gen_{datetime.now().strftime('%Y%m%d')}.log"
 file_handler = logging.FileHandler(log_file)
 file_handler.setLevel(logging.INFO)
 
