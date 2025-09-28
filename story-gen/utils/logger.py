@@ -7,7 +7,7 @@ import os
 from datetime import datetime
 
 # Create logs directory if it doesn't exist
-os.makedirs("logs", exist_ok=True)
+os.makedirs("tmp/logs", exist_ok=True)
 
 # Configure logging
 logger = logging.getLogger("media_gen")
