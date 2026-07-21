@@ -15,6 +15,9 @@
 - [Trend Spotting](./trendspotting/)
 - [Play Farkle with Gemini](./farkle)
 - [Story Gen](./story-gen)
+- [Story Gen v2](https://github.com/cc4i/story-gen)
+- [Deep Research Agent with ADK](https://github.com/cc4i/deep-search-adk)
+- [Nexshift](https://github.com/cc4i/nexshift-agent)
 
 ## Quick Start - RRD Nexus
 

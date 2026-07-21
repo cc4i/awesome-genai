@@ -6,7 +6,7 @@ authors = [
     {name = "CC", email = "cc@email.com"},
 ]
 dependencies = [
-    "google-adk~=1.12.0",
+    "google-adk>=1.28.0",
     "opentelemetry-exporter-gcp-trace~=1.9.0",
     "google-cloud-logging~=3.12.1",
     "google-cloud-aiplatform[evaluation,agent-engines]~=1.110.0",
